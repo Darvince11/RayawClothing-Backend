@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"rayaw-api/internal/config"
 	"rayaw-api/internal/routes"
 	"time"
 
@@ -12,9 +13,10 @@ import (
 )
 
 func main() {
+	//load config
+	cfg := config.Init()
 	//connect to database
-	connstr := "postgresql://rayaw_database_puvg_user:ctayXJGV4yPMe7GU8r0PXiUF1BXCUs87@dpg-d559hjqli9vc73ceuhqg-a.oregon-postgres.render.com/rayaw_database_puvg"
-	db, err := sql.Open("postgres", connstr)
+	db, err := sql.Open("postgres", cfg.DbUrl)
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
 	}
@@ -24,8 +26,8 @@ func main() {
 	}
 
 	//start api server
-	port := ":8080"
-	handler := http.TimeoutHandler(routes.ServerMux(), 20*time.Second, "Request timeout")
+	port := ":" + cfg.Port
+	handler := http.TimeoutHandler(routes.ServerMux(cfg, db), 20*time.Second, "Request timeout")
 
 	server := http.Server{
 		Addr:         port,
@@ -34,7 +36,7 @@ func main() {
 		WriteTimeout: 20 * time.Second,
 	}
 
-	fmt.Printf("Server is listening on port %v", port)
+	fmt.Printf("Server is listening on port %v\n", port)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal("Error starting server:", err)
 	}
