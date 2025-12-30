@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type User struct {
 	Id            int
 	First_name    string
@@ -7,7 +9,7 @@ type User struct {
 	Email         string
 	Phone_number  string
 	User_password string
-	Created_at    int
+	Created_at    time.Time
 }
 
 type SignUpRequest struct {
@@ -26,10 +28,4 @@ type LoginResponse struct {
 	Phone_number  string `json:"phone_number"`
 	Access_token  string `json:"access_token"`
 	Refresh_token string `json:"refresh_tokens"`
-}
-
-type RefreshToken struct {
-	Id            int
-	Refresh_Token string
-	User_Id       int
 }

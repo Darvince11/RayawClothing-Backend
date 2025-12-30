@@ -14,9 +14,11 @@ func ServerMux(config *config.Config, db *sql.DB) http.Handler {
 	mux := http.NewServeMux()
 
 	//Handle auth
+	tokenRepo := repositories.NewTokenRepository(db)
+	tokenService := services.NewTokenService(config.AuthConfig.JWTSecretKey, tokenRepo)
 	authRepo := repositories.NewAuthRepository(db)
-	authService := services.NewAuthService(authRepo, config)
-	authHandlers := handlers.NewAuthenticationHandler(authService)
+	authService := services.NewAuthService(authRepo)
+	authHandlers := handlers.NewAuthenticationHandler(authService, tokenService)
 	authRoutes := NewAuthRoutes(mux, authHandlers)
 	authRoutes.RegisterRoutes()
 

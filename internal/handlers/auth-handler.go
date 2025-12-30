@@ -6,14 +6,16 @@ import (
 	"net/http"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/services"
+	"time"
 )
 
 type AuthenticationHandler struct {
-	authService *services.AuthService
+	authService  *services.AuthService
+	tokenService *services.TokenService
 }
 
-func NewAuthenticationHandler(authService *services.AuthService) *AuthenticationHandler {
-	return &AuthenticationHandler{authService: authService}
+func NewAuthenticationHandler(authService *services.AuthService, tokenService *services.TokenService) *AuthenticationHandler {
+	return &AuthenticationHandler{authService: authService, tokenService: tokenService}
 }
 
 func (ah *AuthenticationHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +33,7 @@ func (ah *AuthenticationHandler) SignUpHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	//sign up
-	_, err = ah.authService.SignUp(&newUser)
+	_, err = ah.authService.Register(&newUser)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error signing user up:%v", err)
@@ -40,24 +42,34 @@ func (ah *AuthenticationHandler) SignUpHandler(w http.ResponseWriter, r *http.Re
 	//on error send error code
 	user, err := ah.authService.GetUserByEmail(newUser.Email)
 	if err != nil {
-		fmt.Println("Error getting user:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Error getting user:", err)
 	}
 	//on success return generate tokens and json response
-	accessToken, err := ah.authService.GenerateJWT(newUser.First_name+newUser.Last_name, "customer", 1200)
+	accessToken, err := ah.tokenService.GenerateAccesToken("customer", 1200)
 	if err != nil {
-		fmt.Println("Error generating token:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Error generating access token:", err)
 	}
-	refreshToken, err := ah.authService.GenerateJWT(newUser.First_name+newUser.Last_name, "customer", 86400)
+	refreshToken, err := ah.tokenService.GenerateRefreshToken(user.Id, time.Now().Add(86400*time.Second))
 	if err != nil {
-		fmt.Println("Error generating token:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Error generating referesh token:", err)
 	}
 
+	err = ah.tokenService.StoreRefreshToken(refreshToken)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Error storing refresh token:", err)
+	}
+
+	//response
 	res := models.Response[responseData]{
 		Success: true,
 		Data: responseData{
 			User_info:     *user,
 			Access_token:  accessToken,
-			Refresh_token: refreshToken,
+			Refresh_token: refreshToken.Token,
 		},
 		Message: "user signup in successfully",
 		Error:   map[string]any{},
