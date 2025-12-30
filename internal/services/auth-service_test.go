@@ -1,36 +1,33 @@
 package services
 
 import (
-	"rayaw-api/internal/config"
+	"rayaw-api/internal/models"
+	"rayaw-api/internal/repositories"
+	"rayaw-api/internal/tests"
 	"testing"
 )
 
-var cfg = config.Config{
-	Port:  "",
-	DbUrl: "",
-	AuthConfig: &config.AuthConfig{
-		JWTSecretKey: "secret_key",
-	},
-}
-var authService *AuthService = NewAuthService(nil, &cfg)
+func TestAuthServeice(t *testing.T) {
+	db := tests.SetupTestDB(t)
+	authRepo := repositories.NewAuthRepository(db)
+	authService := NewAuthService(authRepo)
 
-func TestJWTAuthentication(t *testing.T) {
-	//test GenerateJWT()
-	token, err := authService.GenerateJWT("Kafui", "customer", 3600)
-
-	//Check for any errors
-	if err != nil {
-		t.Errorf("expected no error, got: %v", err)
-	}
-	//Check for empty token
-	if token == "" {
-		t.Error("expected token, got an empty string")
+	newUser := models.SignUpRequest{
+		First_name:    "Kafui",
+		Last_name:     "Dotse",
+		Email:         "kafui42@gmail.com",
+		Phone_number:  "02031578",
+		User_password: "123453423",
 	}
 
-	//test validateJWT()
-	_, err = authService.ValidateJWT(token)
-
+	_, err := authService.Register(&newUser)
 	if err != nil {
-		t.Errorf("Error validating token:%v", err)
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	user, err := authService.GetUserByEmail(newUser.Email)
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	} else {
+		t.Log(user)
 	}
 }
