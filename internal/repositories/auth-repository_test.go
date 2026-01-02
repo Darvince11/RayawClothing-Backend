@@ -35,4 +35,9 @@ func TestAuthRepo(t *testing.T) {
 	}
 
 	t.Log(result)
+
+	err = authRepo.UpdateUser(userId, &user)
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
 }

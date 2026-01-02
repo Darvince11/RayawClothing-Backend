@@ -20,12 +20,7 @@ type SignUpRequest struct {
 	User_password string `json:"user_password"`
 }
 
-type LoginResponse struct {
-	Id            int    `json:"id"`
-	First_name    string `json:"first_name"`
-	Last_name     string `json:"last_name"`
+type LoginRequest struct {
 	Email         string `json:"email"`
-	Phone_number  string `json:"phone_number"`
-	Access_token  string `json:"access_token"`
-	Refresh_token string `json:"refresh_tokens"`
+	User_password string `json:"user_password"`
 }
