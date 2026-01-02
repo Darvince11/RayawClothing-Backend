@@ -106,3 +106,7 @@ func (ts *TokenService) RevokeRefreshToken(token string) error {
 func (ts *TokenService) StoreRefreshToken(refreshToken *models.RefreshToken) error {
 	return ts.tokenRepo.AddRefreshToken(refreshToken)
 }
+
+func (ts *TokenService) GetRefreshTokenById(userId int) (*models.RefreshToken, error) {
+	return ts.tokenRepo.GetRefreshTokenByUserId(userId)
+}
