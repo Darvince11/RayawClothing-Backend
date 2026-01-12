@@ -22,5 +22,12 @@ func ServerMux(config *config.Config, db *sql.DB) http.Handler {
 	authRoutes := NewAuthRoutes(mux, authHandlers)
 	authRoutes.RegisterRoutes()
 
+	//Handle products
+	productRepo := repositories.NewProductsRepository(db)
+	productService := services.NewProductService(productRepo)
+	productHandlers := handlers.NewProductsHandler(productService)
+	productRoutes := NewProductsRoutes(mux, productHandlers)
+	productRoutes.RegisterRoutes()
+
 	return middleware.CorsMiddleware(mux)
 }
