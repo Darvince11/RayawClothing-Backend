@@ -45,4 +45,22 @@ func TestProductsRepository(t *testing.T) {
 		t.Errorf("expected no error, got: %v", err)
 	}
 	t.Logf("product: %v", productQuery)
+
+	//test AddProductVariation
+	variation := models.ProductVariation{
+		ProductId:   productQuery.Id,
+		ProductSize: []string{"S", "M"},
+		Color:       []string{"red", "blue"},
+	}
+
+	err = productsRepository.AddProductVariation(&variation)
+	if err != nil {
+		t.Errorf("expected no error, got: %v", err)
+	}
+	//test GetProductVariation
+	productVariation, err := productsRepository.GetProductVariation(1)
+	if err != nil {
+		t.Errorf("expected no error, got: %v", err)
+	}
+	t.Logf("product variation: %v", productVariation)
 }

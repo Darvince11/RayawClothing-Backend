@@ -69,3 +69,31 @@ func (ph *ProductsHandler) GetAllProductsHandler(w http.ResponseWriter, r *http.
 		return
 	}
 }
+
+func (ph *ProductsHandler) GetProductByIdHandler(w http.ResponseWriter, r *http.Request) {
+	//get the poduct id from the url
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid limit", http.StatusBadRequest)
+		return
+	}
+	//fetch the product
+	product, err := ph.productService.GetProductById(id)
+	if err != nil {
+		http.Error(w, "Error fetching product", http.StatusInternalServerError)
+		return
+	}
+
+	//return response
+	response := models.Response[models.GetProductsByIdResponse]{
+		Success: true,
+		Message: "retrieved product successfully",
+		Data:    *product,
+	}
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, "Error econding response")
+		return
+	}
+}
