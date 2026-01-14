@@ -36,7 +36,7 @@ type Product struct {
 	Id                  int           `json:"id"`
 	Image_url           string        `json:"image_url"`
 	Product_name        string        `json:"product_name"`
-	Product_Description string        `json:"product_description"`
+	Product_Description string        `json:"product_description,omitempty"`
 	Price               float64       `json:"price"`
 	Category            Category      `json:"category"`
 	Product_Status      ProductStatus `json:"product_status"`
@@ -55,4 +55,10 @@ type CreateProductRequest struct {
 	Price        int              `json:"price"`
 	Description  string           `json:"description"`
 	Variations   ProductVariation `json:"variations"`
+}
+
+type GetProductsByIdResponse struct {
+	Product
+	ProductSize []string `json:"product_size"`
+	Color       []string `json:"color"`
 }

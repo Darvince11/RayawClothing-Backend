@@ -11,6 +11,7 @@ type ProductsRepository interface {
 	AddProduct(product *models.Product) (int, error)
 	AddProductVariation(variation *models.ProductVariation) error
 	GetAllProducts(cursor, limit int) (*[]models.Product, error)
+	GetProductVariation(productId int) (*models.ProductVariation, error)
 	GetProductById(productsId int) (*models.Product, error)
 	UpdateProduct(productId int, newProduct *models.Product) error
 	DeleteProduct(productId int) error
@@ -41,7 +42,7 @@ func (pr *ImplProductsRepository) AddProductVariation(variation *models.ProductV
 }
 
 func (pr *ImplProductsRepository) GetAllProducts(cursor int, limit int) (*[]models.Product, error) {
-	query := `SELECT * FROM products 
+	query := `SELECT id, image_url, product_name, price, category, product_status, created_at FROM products 
 	WHERE id > $1
 	ORDER BY id ASC
 	LIMIT $2;
@@ -54,7 +55,7 @@ func (pr *ImplProductsRepository) GetAllProducts(cursor int, limit int) (*[]mode
 
 	for results.Next() {
 		var product models.Product
-		results.Scan(&product.Id, &product.Image_url, &product.Product_name, &product.Product_Description, &product.Price, &product.Category, &product.Product_Status, &product.CreatedAt)
+		results.Scan(&product.Id, &product.Image_url, &product.Product_name, &product.Price, &product.Category, &product.Product_Status, &product.CreatedAt)
 		products = append(products, product)
 	}
 
@@ -68,6 +69,16 @@ func (pr *ImplProductsRepository) GetProductById(productsId int) (*models.Produc
 	err := pr.db.QueryRow(query, productsId).Scan(&product.Id, &product.Image_url, &product.Product_name, &product.Product_Description, &product.Price, &product.Category, &product.Product_Status, &product.CreatedAt)
 	return &product, err
 }
+
+func (pr *ImplProductsRepository) GetProductVariation(productId int) (*models.ProductVariation, error) {
+	query := `SELECT product_size, color FROM product_variants
+	WHERE product_id=$1;
+	`
+	var prodVar models.ProductVariation
+	err := pr.db.QueryRow(query, productId).Scan(pq.Array(&prodVar.ProductSize), pq.Array(&prodVar.Color))
+	return &prodVar, err
+}
+
 func (pr *ImplProductsRepository) UpdateProduct(productId int, newProduct *models.Product) error {
 	query := `UPDATE products
 	SET image_url=$1, product_name=$2, product_description=$3, price=$4, category=$5, product_status=$6

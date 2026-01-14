@@ -16,4 +16,5 @@ func NewProductsRoutes(mux *http.ServeMux, productHandler *handlers.ProductsHand
 
 func (pr *ProductsRoutes) RegisterRoutes() {
 	pr.mux.HandleFunc("GET /products", pr.productHandler.GetAllProductsHandler)
+	pr.mux.HandleFunc("GET /products/{id}", pr.productHandler.GetProductByIdHandler)
 }

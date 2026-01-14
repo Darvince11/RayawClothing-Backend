@@ -26,8 +26,20 @@ func (ps *ProductService) GetAllProducts(cursor, limit int) (*[]models.Product, 
 	return ps.productRepo.GetAllProducts(cursor, limit)
 }
 
-func (ps *ProductService) GetProductById(productId int) (*models.Product, error) {
-	return ps.productRepo.GetProductById(productId)
+func (ps *ProductService) GetProductById(productId int) (*models.GetProductsByIdResponse, error) {
+	var productResponse models.GetProductsByIdResponse
+	product, err := ps.productRepo.GetProductById(productId)
+	if err != nil {
+		return nil, err
+	}
+	variant, err := ps.productRepo.GetProductVariation(product.Id)
+	if err != nil {
+		return nil, err
+	}
+	productResponse.Product = *product
+	productResponse.ProductSize = variant.ProductSize
+	productResponse.Color = variant.Color
+	return &productResponse, nil
 }
 
 func (ps *ProductService) UpdateProduct(productId int, newProduct *models.Product) error {

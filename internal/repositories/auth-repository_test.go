@@ -17,8 +17,8 @@ func TestAuthRepo(t *testing.T) {
 	user := models.User{
 		First_name:    "Kafui",
 		Last_name:     "Dotse",
-		Email:         "kafui17828@gmail.com",
-		Phone_number:  "0233208909",
+		Email:         "kafui21h@gmail.com",
+		Phone_number:  "0233202897809",
 		User_password: "123456",
 	}
 
@@ -35,14 +35,6 @@ func TestAuthRepo(t *testing.T) {
 	}
 
 	t.Log(result)
-
-	user = models.User{
-		First_name:    "Kafui",
-		Last_name:     "Dotse",
-		Email:         "kafui128779878@gmail.com",
-		Phone_number:  "02332091221",
-		User_password: "123456",
-	}
 
 	err = authRepo.UpdateUser(userId, &user)
 	if err != nil {
