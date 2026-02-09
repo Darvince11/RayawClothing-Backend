@@ -18,6 +18,11 @@ type PaymentHistory struct {
 	PaymentDate   string        `json:"payment_date"`
 }
 
+type PaymentInitRequest struct {
+	Email  string  `json:"email"`
+	Amount float64 `json:"amount"`
+}
+
 type PaystackInitResponse struct {
 	Status  bool   `json:"status"`
 	Message string `json:"message"`
