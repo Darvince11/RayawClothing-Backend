@@ -1,20 +1,22 @@
 CREATE TABLE IF NOT EXISTS orders (
-    id SERIAL PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid(),
     user_id INT NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
     order_status VARCHAR(20) DEFAULT 'pending',
-    order_date TIMESTAMPTZ DEFAULT now()
+    order_date TIMESTAMPTZ DEFAULT now(),
+
+    CONSTRAINT pk_orders PRIMARY KEY (id)
 );
 
 -- ORDER ITEMS
 CREATE TABLE IF NOT EXISTS order_items (
-    id SERIAL PRIMARY KEY,
-    order_id INT NOT NULL,
+    id SERIAL,
+    order_id UUID NOT NULL,
     product_id INT NOT NULL,
-    variant_id INT NOT NULL,
     quantity INT DEFAULT 1,
-    price DECIMAL(10,2) NOT NULL,
 
+
+    CONSTRAINT pk_order_items PRIMARY KEY (id),
     CONSTRAINT fk_order_id
     FOREIGN KEY (order_id)
     REFERENCES orders(id)
@@ -22,9 +24,5 @@ CREATE TABLE IF NOT EXISTS order_items (
     CONSTRAINT fk_product_id
     FOREIGN KEY (product_id)
     REFERENCES public.products(id)
-    ON DELETE CASCADE,
-    CONSTRAINT fk_product_variant_id
-    FOREIGN KEY (variant_id)
-    REFERENCES public.product_variants(id)
     ON DELETE CASCADE
 );

@@ -8,9 +8,11 @@ import (
 )
 
 type Config struct {
-	Port       string
-	DbUrl      string
-	AuthConfig *AuthConfig
+	Port                string
+	DbUrl               string
+	AuthConfig          *AuthConfig
+	PaystackSecretKey   string
+	PaystackCallbackUrl string
 }
 
 func Init() *Config {
@@ -22,9 +24,11 @@ func Init() *Config {
 	authConfig := AuthConfig{JWTSecretKey: getEnv("JWT_SECRETKEY", "")}
 
 	return &Config{
-		Port:       getEnv("PORT", "8080"),
-		DbUrl:      getEnv("DATABASE_URL", ""),
-		AuthConfig: &authConfig,
+		Port:                getEnv("PORT", "8080"),
+		DbUrl:               getEnv("DATABASE_URL", ""),
+		AuthConfig:          &authConfig,
+		PaystackSecretKey:   getEnv("PAYSTACK_SECRET_KEY", ""),
+		PaystackCallbackUrl: getEnv("PAYSTACK_CALLBACK_URL", ""),
 	}
 
 }

@@ -29,5 +29,12 @@ func ServerMux(config *config.Config, db *sql.DB) http.Handler {
 	productRoutes := NewProductsRoutes(mux, productHandlers)
 	productRoutes.RegisterRoutes()
 
+	//Handle payments
+	paymentRepo := repositories.NewImplPaymentRepository(db)
+	paymentService := services.NewPaymentService(paymentRepo)
+	paymentHandler := handlers.NewPaymentHandler(paymentService)
+	paymentRoutes := NewPaymentRoutes(mux, paymentHandler)
+	paymentRoutes.RegisterRoutes()
+
 	return middleware.CorsMiddleware(mux)
 }
