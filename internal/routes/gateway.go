@@ -32,7 +32,7 @@ func ServerMux(config *config.Config, db *sql.DB) http.Handler {
 	//Handle payments
 	paymentRepo := repositories.NewImplPaymentRepository(db)
 	paymentService := services.NewPaymentService(paymentRepo)
-	paymentHandler := handlers.NewPaymentHandler(paymentService)
+	paymentHandler := handlers.NewPaymentHandler(paymentService, config)
 	paymentRoutes := NewPaymentRoutes(mux, paymentHandler)
 	paymentRoutes.RegisterRoutes()
 

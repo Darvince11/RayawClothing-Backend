@@ -12,6 +12,7 @@ import (
 	"rayaw-api/internal/config"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/services"
+	"time"
 )
 
 type PaymentHandler struct {
@@ -19,18 +20,21 @@ type PaymentHandler struct {
 	config *config.Config
 }
 
-func NewPaymentHandler(ps *services.PaymentService) *PaymentHandler {
-	return &PaymentHandler{ps: ps}
+func NewPaymentHandler(ps *services.PaymentService, config *config.Config) *PaymentHandler {
+	return &PaymentHandler{ps: ps, config: config}
 }
 
 func (ph *PaymentHandler) InitializePayment(w http.ResponseWriter, r *http.Request) {
-	client := &http.Client{}
+	client := &http.Client{Timeout: 20 * time.Second}
+	defer client.CloseIdleConnections()
 
 	//decode data
 	type InitData struct {
-		models.PaymentInitRequest
-		Callback_Url string `json:"callback_url"`
+		Email        string  `json:"email"`
+		Amount       float64 `json:"amount"`
+		Callback_Url string  `json:"callback_url"`
 	}
+
 	var initData InitData
 	err := json.NewDecoder(r.Body).Decode(&initData)
 	if err != nil {
@@ -38,11 +42,9 @@ func (ph *PaymentHandler) InitializePayment(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	fmt.Println("Received payment initialization request:", initData)
-
 	initData.Callback_Url = ph.config.PaystackCallbackUrl
 
-	jsonBody, err := json.Marshal(initData)
+	jsonBody, err := json.Marshal(&initData)
 	if err != nil {
 		http.Error(w, "Failed to marshal request body", http.StatusInternalServerError)
 		return
