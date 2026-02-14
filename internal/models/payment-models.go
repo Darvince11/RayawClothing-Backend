@@ -19,8 +19,9 @@ type PaymentHistory struct {
 }
 
 type PaymentInitRequest struct {
-	Email  string  `json:"email"`
-	Amount float64 `json:"amount"`
+	Email        string `json:"email"`
+	Amount       int    `json:"amount"`
+	Callback_Url string `json:"callback_url"`
 }
 
 type PaystackInitResponse struct {
