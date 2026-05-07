@@ -20,9 +20,9 @@ func NewImplPaymentRepository(db *sql.DB) *ImplPaymentRepository {
 }
 
 func (pr *ImplPaymentRepository) AddPaymentHistory(paymentHistory *models.PaymentHistory) (int, error) {
-	query := `INSERT INTO payments_history (order_id, payment_method, amount, payment_status) VALUES ($1, $2, $3, $4) RETURNING payment_id`
+	query := `INSERT INTO payments_history (order_id, reference, currency, payment_method, amount, payment_status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING payment_id`
 	var paymentId int
-	err := pr.db.QueryRow(query, paymentHistory.OrderId, paymentHistory.PaymentMethod, paymentHistory.Amount, paymentHistory.PaymentStatus).Scan(&paymentId)
+	err := pr.db.QueryRow(query, paymentHistory.OrderId, paymentHistory.Reference, paymentHistory.Currency, paymentHistory.PaymentMethod, paymentHistory.Amount, paymentHistory.PaymentStatus, paymentHistory.CreatedAt, paymentHistory.UpdatedAt).Scan(&paymentId)
 	return paymentId, err
 }
 
@@ -31,12 +31,25 @@ func (pr *ImplPaymentRepository) GetPaymentHistoryByReference(reference string) 
 
 	var paymentHistory models.PaymentHistory
 
-	err := pr.db.QueryRow(query, reference).Scan(&paymentHistory)
+	err := pr.db.QueryRow(query, reference).Scan(&paymentHistory.Id, &paymentHistory.OrderId, &paymentHistory.Reference, &paymentHistory.Currency, &paymentHistory.PaymentMethod, &paymentHistory.Amount, &paymentHistory.PaymentStatus, &paymentHistory.CreatedAt, &paymentHistory.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
 	return &paymentHistory, nil
+}
+
+func (pr *ImplPaymentRepository) GetAllPaymentHistoryByUserId(userId int) ([]models.PaymentHistory, error) {
+	query := `SELECT (reference, payment_method, amount, payment_status, created_at) FROM PAYMENTS_HISTORY WHERE user_id=$1`
+	rows, err := pr.db.Query(query, userId)
+
+	var PaymentHistory []models.PaymentHistory
+	for rows.Next() {
+		var paymentHistory models.PaymentHistory
+		rows.Scan(&paymentHistory.Reference, &paymentHistory.PaymentMethod, &paymentHistory.Amount, &paymentHistory.PaymentStatus, &paymentHistory.CreatedAt)
+		PaymentHistory = append(PaymentHistory, paymentHistory)
+	}
+	return PaymentHistory, err
 }
 
 func (pr *ImplPaymentRepository) UpdatePaymentHistoryStatus(status *string) error {

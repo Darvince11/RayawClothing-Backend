@@ -21,6 +21,10 @@ func (ps *PaymentService) GetPaymentHistoryByReference(reference string) (*model
 	return ps.pr.GetPaymentHistoryByReference(reference)
 }
 
+func (ps *PaymentService) GetAllPaymentHistoryByUserId(userId int) ([]models.PaymentHistory, error) {
+	return ps.pr.GetAllPaymentHistoryByUserId(userId)
+}
+
 func (ps *PaymentService) UpdatePaymentHistoryStatus(status *string) error {
 	return ps.pr.UpdatePaymentHistoryStatus(status)
 }

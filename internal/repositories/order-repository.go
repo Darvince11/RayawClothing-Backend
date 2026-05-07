@@ -15,7 +15,7 @@ type ImplOrderRepository struct {
 	db *sql.DB
 }
 
-func NewOrderRepository(db *sql.DB) OrderRepository {
+func NewOrderRepository(db *sql.DB) *ImplOrderRepository {
 	return &ImplOrderRepository{db: db}
 }
 
