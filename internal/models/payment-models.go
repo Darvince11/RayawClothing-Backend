@@ -12,10 +12,13 @@ const (
 type PaymentHistory struct {
 	Id            int           `json:"id"`
 	OrderId       string        `json:"order_id"`
+	Reference     string        `json:"reference"`
+	Currency      string        `json:"currency"`
 	PaymentMethod PaymentMethod `json:"payment_method"`
 	Amount        float64       `json:"amount"`
 	PaymentStatus string        `json:"payment_status"`
-	PaymentDate   string        `json:"payment_date"`
+	CreatedAt     time.Time     `json:"created_at"`
+	UpdatedAt     time.Time     `json:"updated_at"`
 }
 
 type PaymentInitRequest struct {

@@ -12,6 +12,7 @@ import (
 	"rayaw-api/internal/config"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/services"
+	"strconv"
 	"time"
 )
 
@@ -141,8 +142,63 @@ func (ph *PaymentHandler) VerifyPayment(w http.ResponseWriter, r *http.Request) 
 
 	//return response
 	err = json.NewEncoder(w).Encode(paymentHistory)
+	w.WriteHeader(http.StatusAccepted)
 	if err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
+	}
+}
+
+func (ph *PaymentHandler) GetAllPaymentHistoryByUserId(w http.ResponseWriter, r *http.Request) {
+	userId, err := strconv.Atoi(r.PathValue("user-id"))
+	if err != nil {
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
+
+	paymentHistory, err := ph.ps.GetAllPaymentHistoryByUserId(userId)
+
+	res := models.Response[[]models.PaymentHistory]{
+		Success: true,
+		Message: "Payment history fetched successfully",
+		Data:    paymentHistory,
+	}
+
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+	}
+}
+
+func (ph *PaymentHandler) GetPaymentHistoryByReference(w http.ResponseWriter, r *http.Request) {
+	ref := r.URL.Query().Get("reference")
+	paymentHistory, err := ph.ps.GetPaymentHistoryByReference(ref)
+	if err != nil {
+		http.Error(w, "Failed to fetch payment history", http.StatusInternalServerError)
+		return
+	}
+
+	res := models.Response[models.PaymentHistory]{
+		Success: true,
+		Message: "Payment history fetched successfully",
+		Data:    *paymentHistory,
+	}
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+	}
+
+}
+
+func (ph *PaymentHandler) AddPaymentHistory(w http.ResponseWriter, r *http.Request) {
+	var paymentHistory models.PaymentHistory
+	err := json.NewDecoder(r.Body).Decode(&paymentHistory)
+	if err != nil {
+		http.Error(w, "Error decoding payment history", http.StatusInternalServerError)
+	}
+
+	_, err = ph.ps.AddPaymentHistory(&paymentHistory)
+	if err != nil {
+		http.Error(w, "Error adding payment history", http.StatusInternalServerError)
 	}
 }
