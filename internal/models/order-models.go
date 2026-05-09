@@ -18,11 +18,8 @@ type OrderProduct struct {
 }
 
 type CreateOrderRequest struct {
-	Products      []OrderProduct `json:"products"`
-	UserId        int            `json:"user_id"`
-	PaymentMethod PaymentMethod  `json:"payment_method"`
-	TotalAmount   float64        `json:"total_amount"`
-	OrderStatus   OrderStatus    `json:"order_status"`
+	Products []OrderProduct `json:"products"`
+	UserId   int            `json:"user_id"`
 }
 
 type Order struct {

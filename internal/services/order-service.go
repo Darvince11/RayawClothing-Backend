@@ -3,6 +3,8 @@ package services
 import (
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/repositories"
+
+	"github.com/google/uuid"
 )
 
 type OrderService struct {
@@ -13,7 +15,7 @@ func NewOrderService(or *repositories.ImplOrderRepository) *OrderService {
 	return &OrderService{or: or}
 }
 
-func (os *OrderService) AddOrder(order *models.Order) (int, error) {
+func (os *OrderService) AddOrder(order *models.Order) (uuid.UUID, error) {
 	return os.or.AddOrder(order)
 }
 
