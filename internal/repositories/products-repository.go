@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"rayaw-api/internal/models"
 
 	"github.com/lib/pq"
@@ -11,8 +12,8 @@ type ProductsRepository interface {
 	AddProduct(product *models.Product) (int, error)
 	AddProductVariation(variation *models.ProductVariation) error
 	GetAllProducts(cursor, limit int) (*[]models.Product, error)
-	GetProductVariation(productId int) (*models.ProductVariation, error)
-	GetProductById(productsId int) (*models.Product, error)
+	GetProductsVariation(productId []int) (*[]models.ProductVariation, error)
+	GetProductsById(productsId []int) (*[]models.Product, error)
 	UpdateProduct(productId int, newProduct *models.Product) error
 	DeleteProduct(productId int) error
 }
@@ -61,22 +62,50 @@ func (pr *ImplProductsRepository) GetAllProducts(cursor int, limit int) (*[]mode
 
 	return &products, nil
 }
-func (pr *ImplProductsRepository) GetProductById(productsId int) (*models.Product, error) {
+func (pr *ImplProductsRepository) GetProductsById(productsId []int) (*[]models.Product, error) {
+	placeholders := []string{}
+	for index := range productsId {
+		placeholders = append(placeholders, fmt.Sprintf("$%v", index+1))
+	}
+
 	query := `SELECT * FROM products
-	WHERE id=$1;
+	WHERE id = ANY($1);
 	`
-	var product models.Product
-	err := pr.db.QueryRow(query, productsId).Scan(&product.Id, &product.Image_url, &product.Product_name, &product.Product_Description, &product.Price, &product.Category, &product.Product_Status, &product.CreatedAt)
-	return &product, err
+	var products []models.Product
+	rows, err := pr.db.Query(query, pq.Array(productsId))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var product models.Product
+		err := rows.Scan(&product.Id, &product.Image_url, &product.Product_name, &product.Product_Description, &product.Price, &product.Category, &product.Product_Status, &product.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		products = append(products, product)
+	}
+	return &products, err
 }
 
-func (pr *ImplProductsRepository) GetProductVariation(productId int) (*models.ProductVariation, error) {
+func (pr *ImplProductsRepository) GetProductsVariation(productId []int) (*[]models.ProductVariation, error) {
 	query := `SELECT product_size, color FROM product_variants
-	WHERE product_id=$1;
+	WHERE product_id = ANY($1) ;
 	`
-	var prodVar models.ProductVariation
-	err := pr.db.QueryRow(query, productId).Scan(pq.Array(&prodVar.ProductSize), pq.Array(&prodVar.Color))
-	return &prodVar, err
+	prodVars := []models.ProductVariation{}
+	row, err := pr.db.Query(query, pq.Array(productId))
+
+	for row.Next() {
+		var prodVar models.ProductVariation
+		err := row.Scan(pq.Array(&prodVar.ProductSize), pq.Array(&prodVar.Color))
+		if err != nil {
+			return nil, err
+		}
+		prodVars = append(prodVars, prodVar)
+	}
+
+	return &prodVars, err
 }
 
 func (pr *ImplProductsRepository) UpdateProduct(productId int, newProduct *models.Product) error {

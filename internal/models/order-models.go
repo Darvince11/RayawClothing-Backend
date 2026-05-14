@@ -20,6 +20,7 @@ type OrderProduct struct {
 type CreateOrderRequest struct {
 	Products []OrderProduct `json:"products"`
 	UserId   int            `json:"user_id"`
+	Email    string         `json:"email"`
 }
 
 type Order struct {

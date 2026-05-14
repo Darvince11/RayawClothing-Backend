@@ -17,20 +17,31 @@ func NewOrderHandler(os *services.OrderService) *OrderHandler {
 }
 
 func (oh *OrderHandler) AddOrder(w http.ResponseWriter, r *http.Request) {
-	var order models.Order
+	var orderRequest models.CreateOrderRequest
 
-	err := json.NewDecoder(r.Body).Decode(&order)
+	err := json.NewDecoder(r.Body).Decode(&orderRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	_, err = oh.os.AddOrder(&order)
+	authUrl, err := oh.os.AddOrder(&orderRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	response := models.Response[map[string]string]{
+		Success: true,
+		Message: "Order created succesfully",
+		Data:    map[string]string{"authorization_url": authUrl},
+	}
 	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Error ecoding json"+err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (oh *OrderHandler) GetOrdersByUserId(w http.ResponseWriter, r *http.Request) {
@@ -53,20 +64,4 @@ func (oh *OrderHandler) GetOrdersByUserId(w http.ResponseWriter, r *http.Request
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
-}
-
-func (oh *OrderHandler) AddOrderItems(w http.ResponseWriter, r *http.Request) {
-	var orderItems []models.OrderItem
-	err := json.NewDecoder(r.Body).Decode(&orderItems)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = oh.os.AddOrderItems(&orderItems)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusCreated)
 }

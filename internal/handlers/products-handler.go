@@ -74,13 +74,13 @@ func (ph *ProductsHandler) GetProductByIdHandler(w http.ResponseWriter, r *http.
 	//get the poduct id from the url
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "Invalid limit", http.StatusBadRequest)
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
 		return
 	}
 	//fetch the product
-	product, err := ph.productService.GetProductById(id)
+	products, err := ph.productService.GetProductsById([]int{id})
 	if err != nil {
-		http.Error(w, "Error fetching product", http.StatusInternalServerError)
+		http.Error(w, "Error fetching product:"+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (ph *ProductsHandler) GetProductByIdHandler(w http.ResponseWriter, r *http.
 	response := models.Response[models.GetProductsByIdResponse]{
 		Success: true,
 		Message: "retrieved product successfully",
-		Data:    *product,
+		Data:    (*products)[0],
 	}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
