@@ -21,7 +21,7 @@ type PaymentHistory struct {
 	UpdatedAt     time.Time     `json:"updated_at"`
 }
 
-type PaymentInitRequest struct {
+type PaymentInit struct {
 	Email        string `json:"email"`
 	Amount       int    `json:"amount"`
 	Callback_Url string `json:"callback_url"`

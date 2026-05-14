@@ -17,5 +17,4 @@ func NewOrderRoutes(mux *http.ServeMux, orderHandler *handlers.OrderHandler) *Or
 func (or *OrderRoutes) RegisterRoutes() {
 	or.mux.HandleFunc("POST /orders", or.orderHandler.AddOrder)
 	or.mux.HandleFunc("GET /orders/user/{id}", or.orderHandler.GetOrdersByUserId)
-	or.mux.HandleFunc("POST /order-items", or.orderHandler.AddOrderItems)
 }

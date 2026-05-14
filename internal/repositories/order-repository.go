@@ -47,10 +47,10 @@ func (r *ImplOrderRepository) GetOrdersByUserId(userId int) (*[]models.Order, er
 }
 
 func (r *ImplOrderRepository) AddOrder(order *models.Order) (uuid.UUID, error) {
-	query := `INSERT INTO orders (id, user_id, total_amount, order_status)
-	 VALUES ($1, $2, $3, $4) RETURNING id`
+	query := `INSERT INTO orders (user_id, total_amount, order_status)
+	 VALUES ($1, $2, $3) RETURNING id`
 	var id uuid.UUID
-	err := r.db.QueryRow(query, order.Id, order.UserId, order.TotalAmount, order.OrderStatus).Scan(&id)
+	err := r.db.QueryRow(query, order.UserId, order.TotalAmount, order.OrderStatus).Scan(&id)
 	return id, err
 }
 
