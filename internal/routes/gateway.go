@@ -10,7 +10,7 @@ import (
 	"rayaw-api/internal/services"
 )
 
-func ServerMux(config *config.Config, db *sql.DB) http.Handler {
+func ServerMux(config *config.Config, db *sql.DB, client *http.Client) http.Handler {
 	mux := http.NewServeMux()
 
 	//Handle auth
@@ -31,14 +31,14 @@ func ServerMux(config *config.Config, db *sql.DB) http.Handler {
 
 	//Handle payments
 	paymentRepo := repositories.NewImplPaymentRepository(db)
-	paymentService := services.NewPaymentService(paymentRepo)
+	paymentService := services.NewPaymentService(paymentRepo, config, client)
 	paymentHandler := handlers.NewPaymentHandler(paymentService, config)
 	paymentRoutes := NewPaymentRoutes(mux, paymentHandler)
 	paymentRoutes.RegisterRoutes()
 
 	//Handle orders
 	orderRepo := repositories.NewOrderRepository(db)
-	orderService := services.NewOrderService(orderRepo)
+	orderService := services.NewOrderService(orderRepo, productRepo, db, paymentService)
 	orderHandler := handlers.NewOrderHandler(orderService)
 	orderRoutes := NewOrderRoutes(mux, orderHandler)
 	orderRoutes.RegisterRoutes()

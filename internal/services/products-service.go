@@ -26,20 +26,25 @@ func (ps *ProductService) GetAllProducts(cursor, limit int) (*[]models.Product, 
 	return ps.productRepo.GetAllProducts(cursor, limit)
 }
 
-func (ps *ProductService) GetProductById(productId int) (*models.GetProductsByIdResponse, error) {
-	var productResponse models.GetProductsByIdResponse
-	product, err := ps.productRepo.GetProductById(productId)
+func (ps *ProductService) GetProductsById(productsId []int) (*[]models.GetProductsByIdResponse, error) {
+	productsResponse := []models.GetProductsByIdResponse{}
+	products, err := ps.productRepo.GetProductsById(productsId)
 	if err != nil {
 		return nil, err
 	}
-	variant, err := ps.productRepo.GetProductVariation(product.Id)
+	variants, err := ps.productRepo.GetProductsVariation(productsId)
 	if err != nil {
 		return nil, err
 	}
-	productResponse.Product = *product
-	productResponse.ProductSize = variant.ProductSize
-	productResponse.Color = variant.Color
-	return &productResponse, nil
+
+	for pIndex, product := range *products {
+		var productResponse models.GetProductsByIdResponse
+		productResponse.Product = product
+		productResponse.ProductSize = (*variants)[pIndex].ProductSize
+		productResponse.Color = (*variants)[pIndex].Color
+		productsResponse = append(productsResponse, productResponse)
+	}
+	return &productsResponse, nil
 }
 
 func (ps *ProductService) UpdateProduct(productId int, newProduct *models.Product) error {

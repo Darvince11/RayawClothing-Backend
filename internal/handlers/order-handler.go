@@ -6,6 +6,8 @@ import (
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/services"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type OrderHandler struct {
@@ -17,20 +19,31 @@ func NewOrderHandler(os *services.OrderService) *OrderHandler {
 }
 
 func (oh *OrderHandler) AddOrder(w http.ResponseWriter, r *http.Request) {
-	var order models.Order
+	var orderRequest models.CreateOrderRequest
 
-	err := json.NewDecoder(r.Body).Decode(&order)
+	err := json.NewDecoder(r.Body).Decode(&orderRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	_, err = oh.os.AddOrder(&order)
+	addOrderResponse, err := oh.os.AddOrder(&orderRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	response := models.Response[models.AddOrderResponse]{
+		Success: true,
+		Message: "Order created succesfully",
+		Data:    *addOrderResponse,
+	}
 	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Error ecoding json"+err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (oh *OrderHandler) GetOrdersByUserId(w http.ResponseWriter, r *http.Request) {
@@ -55,18 +68,30 @@ func (oh *OrderHandler) GetOrdersByUserId(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(response)
 }
 
-func (oh *OrderHandler) AddOrderItems(w http.ResponseWriter, r *http.Request) {
-	var orderItems []models.OrderItem
-	err := json.NewDecoder(r.Body).Decode(&orderItems)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+func (oh *OrderHandler) GetOrderById(w http.ResponseWriter, r *http.Request) {
+	orderIdStr := r.PathValue("id")
+	if orderIdStr == "" {
+		http.Error(w, "order id is required", http.StatusBadRequest)
 		return
 	}
 
-	err = oh.os.AddOrderItems(&orderItems)
+	orderId, err := uuid.Parse(orderIdStr)
+	if err != nil {
+		http.Error(w, "invalid order id", http.StatusBadRequest)
+		return
+	}
+
+	orderWithItems, err := oh.os.GetOrderById(orderId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+
+	response := models.Response[models.OrderWithItems]{
+		Success: true,
+		Message: "Order fetched successfully",
+		Data:    *orderWithItems,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
