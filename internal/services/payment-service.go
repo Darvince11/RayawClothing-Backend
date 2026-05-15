@@ -7,6 +7,8 @@ import (
 	"rayaw-api/internal/config"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/repositories"
+
+	"github.com/google/uuid"
 )
 
 type PaymentService struct {
@@ -35,11 +37,11 @@ func (ps *PaymentService) UpdatePaymentHistoryStatus(status *string) error {
 	return ps.pr.UpdatePaymentHistoryStatus(status)
 }
 
-func (ps *PaymentService) InitializePayment(email string, amount float64) (string, error) {
+func (ps *PaymentService) InitializePayment(email string, amount float64, orderId uuid.UUID) (string, error) {
 	paymentInitData := models.PaymentInit{
 		Email:        email,
 		Amount:       int(amount * 100),
-		Callback_Url: ps.config.PaystackCallbackUrl,
+		Callback_Url: ps.config.PaystackCallbackUrl + orderId.String(),
 	}
 
 	jsonBody, err := json.Marshal(&paymentInitData)

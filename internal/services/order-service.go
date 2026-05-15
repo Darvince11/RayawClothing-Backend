@@ -64,7 +64,7 @@ func (os *OrderService) AddOrder(orderRequest *models.CreateOrderRequest) (*mode
 	}
 
 	// initialize payment
-	authUrl, err := os.paymentProcessor.InitializePayment(orderRequest.Email, totalAmount)
+	authUrl, err := os.paymentProcessor.InitializePayment(orderRequest.Email, totalAmount, orderId)
 	if err != nil {
 		return nil, err
 	}
