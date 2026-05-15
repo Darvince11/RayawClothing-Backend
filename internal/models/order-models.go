@@ -6,6 +6,7 @@ type OrderStatus string
 
 const (
 	OrderStatusPending   OrderStatus = "pending"
+	OrderStatusPaid      OrderStatus = "paid"
 	OrderStatusShipping  OrderStatus = "shipping"
 	OrderStatusDelivery  OrderStatus = "delivery"
 	OrderStatusCompleted OrderStatus = "completed"
@@ -36,4 +37,26 @@ type OrderItem struct {
 	OrderId   uuid.UUID `json:"order_id"`
 	ProductId int       `json:"product_id"`
 	Quantity  int       `json:"quantity"`
+}
+
+type GetOrderItemsResponse struct {
+	ImageUrl    string  `json:"image_url"`
+	ProductId   int     `json:"product_id"`
+	ProductName string  `json:"product_name"`
+	Price       float64 `json:"price"`
+	Quantity    int     `json:"quantity"`
+	Color       string  `json:"color"`
+	Size        string  `json:"size"`
+}
+
+type OrderWithItems struct {
+	OrderId               uuid.UUID               `json:"order_id"`
+	Status                OrderStatus             `json:"status"`
+	CreatedAt             string                  `json:"created_at"`
+	GetOrderItemsResponse []GetOrderItemsResponse `json:"order_items"`
+}
+
+type AddOrderResponse struct {
+	OrderId          uuid.UUID `json:"order_id"`
+	AuthorizationUrl string    `json:"authorization_url"`
 }
