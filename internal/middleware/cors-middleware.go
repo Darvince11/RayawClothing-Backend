@@ -4,7 +4,7 @@ import "net/http"
 
 var AllowedOriging = []string{
 	"https://rayaw-store.netlify.app",
-	"localhost:5173",
+	"http://localhost:5173",
 }
 
 func CorsMiddleware(next http.Handler) http.Handler {
