@@ -26,7 +26,6 @@ func (oh *OrderHandler) AddOrder(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	addOrderResponse, err := oh.os.AddOrder(&orderRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -41,7 +40,7 @@ func (oh *OrderHandler) AddOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		http.Error(w, "Error ecoding json"+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error encoding json"+err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -59,7 +58,7 @@ func (oh *OrderHandler) GetOrdersByUserId(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	response := models.Response[[]models.Order]{
+	response := models.Response[[]models.GetOrderByUserIdResponse]{
 		Success: true,
 		Message: "Orders fetched successfully",
 		Data:    *orders,

@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/tests"
 	"testing"
@@ -23,10 +24,17 @@ func TestOrderRepository(t *testing.T) {
 		OrderStatus: models.OrderStatusPending,
 	}
 
-	_, err := repo.AddOrder(&order)
+	tx, err := db.BeginTx(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	_, err = repo.AddOrder(&order, tx)
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
+
+	tx.Commit()
 
 	orders, err := repo.GetOrdersByUserId(order.UserId)
 	if err != nil {

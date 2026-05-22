@@ -60,3 +60,12 @@ type AddOrderResponse struct {
 	OrderId          uuid.UUID `json:"order_id"`
 	AuthorizationUrl string    `json:"authorization_url"`
 }
+
+type GetOrderByUserIdResponse struct {
+	Id              uuid.UUID   `json:"id"`
+	UserId          int         `json:"user_id"`
+	TotalAmount     float64     `json:"total_amount"`
+	OrderStatus     OrderStatus `json:"order_status"`
+	OrderDate       string      `json:"order_date"`
+	OrderItemsNames []string    `json:"order_items_names"`
+}
