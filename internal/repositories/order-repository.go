@@ -3,8 +3,10 @@ package repositories
 import (
 	"database/sql"
 	"rayaw-api/internal/models"
+	"rayaw-api/utils"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 type OrderRepository interface {
@@ -48,20 +50,20 @@ func (r *ImplOrderRepository) GetOrdersByUserId(userId int) (*[]models.Order, er
 	return &orders, nil
 }
 
-func (r *ImplOrderRepository) AddOrder(order *models.Order) (uuid.UUID, error) {
+func (r *ImplOrderRepository) AddOrder(order *models.Order, tx *sql.Tx) (uuid.UUID, error) {
 	query := `INSERT INTO orders (user_id, total_amount, order_status)
 	 VALUES ($1, $2, $3) RETURNING id`
 	var id uuid.UUID
-	err := r.db.QueryRow(query, order.UserId, order.TotalAmount, order.OrderStatus).Scan(&id)
+	err := tx.QueryRow(query, order.UserId, order.TotalAmount, order.OrderStatus).Scan(&id)
 	return id, err
 }
 
-func (r *ImplOrderRepository) AddOrderItems(orderItems *[]models.OrderItem) error {
+func (r *ImplOrderRepository) AddOrderItems(orderItems *[]models.OrderItem, tx *sql.Tx) error {
 	query := `INSERT INTO order_items (order_id, product_id, quantity)
 	VALUES ($1, $2, $3)`
 
 	for _, item := range *orderItems {
-		_, err := r.db.Exec(query, item.OrderId, item.ProductId, item.Quantity)
+		_, err := tx.Exec(query, item.OrderId, item.ProductId, item.Quantity)
 		if err != nil {
 			return err
 		}
@@ -81,14 +83,14 @@ func (r *ImplOrderRepository) GetOrderById(orderId uuid.UUID) (*models.Order, er
 	return &order, nil
 }
 
-func (r *ImplOrderRepository) GetOrderItemsByOrderId(orderId uuid.UUID) (*[]models.OrderItem, error) {
+func (r *ImplOrderRepository) GetOrderItemsByOrderId(orderIds []uuid.UUID) (*map[uuid.UUID][]models.OrderItem, error) {
 	query := `SELECT id, order_id, product_id, quantity
 	 FROM order_items 
-	 WHERE order_id = $1`
+	 WHERE order_id = ANY($1)`
 
 	var orderItems []models.OrderItem
 
-	rows, err := r.db.Query(query, orderId)
+	rows, err := r.db.Query(query, pq.Array(orderIds))
 	if err != nil {
 		return nil, err
 	}
@@ -102,5 +104,6 @@ func (r *ImplOrderRepository) GetOrderItemsByOrderId(orderId uuid.UUID) (*[]mode
 		}
 		orderItems = append(orderItems, item)
 	}
-	return &orderItems, nil
+	result := utils.GroupItemsById(&orderItems)
+	return &result, nil
 }
