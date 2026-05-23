@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"rayaw-api/internal/interfaces"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/repositories"
@@ -65,6 +67,25 @@ func (os *OrderService) AddOrder(orderRequest *models.CreateOrderRequest) (*mode
 		orderItems = append(orderItems, orderItem)
 	}
 	err = os.or.AddOrderItems(&orderItems, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	//add payment history
+	reference, err := GenerateReference()
+	if err != nil {
+		return nil, err
+	}
+
+	paymentHistory := &models.PaymentHistory{
+		OrderId:       orderId,
+		UserId:        orderRequest.UserId,
+		Reference:     reference,
+		Amount:        totalAmount,
+		PaymentStatus: models.PaymentStatusPending,
+	}
+
+	_, err = os.paymentProcessor.AddPaymentHistory(paymentHistory, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -196,4 +217,15 @@ func (os *OrderService) GetOrderById(orderId uuid.UUID) (*models.OrderWithItems,
 		GetOrderItemsResponse: getOrderItems,
 	}
 	return orderWithItems, nil
+}
+
+func GenerateReference() (string, error) {
+	bytes := make([]byte, 8)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+
+	reference := base64.RawURLEncoding.EncodeToString(bytes)
+	return reference, nil
 }

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/hex"
@@ -13,7 +12,6 @@ import (
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/services"
 	"strconv"
-	"time"
 )
 
 type PaymentHandler struct {
@@ -25,61 +23,8 @@ func NewPaymentHandler(ps *services.PaymentService, config *config.Config) *Paym
 	return &PaymentHandler{ps: ps, config: config}
 }
 
-func (ph *PaymentHandler) InitializePayment(w http.ResponseWriter, r *http.Request) {
-	client := &http.Client{Timeout: 20 * time.Second}
-	defer client.CloseIdleConnections()
-
-	//decode data
-	type InitData struct {
-		Email        string  `json:"email"`
-		Amount       float64 `json:"amount"`
-		Callback_Url string  `json:"callback_url"`
-	}
-
-	var initData InitData
-	err := json.NewDecoder(r.Body).Decode(&initData)
-	if err != nil {
-		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
-		return
-	}
-
-	initData.Callback_Url = ph.config.PaystackCallbackUrl
-
-	jsonBody, err := json.Marshal(&initData)
-	if err != nil {
-		http.Error(w, "Failed to marshal request body", http.StatusInternalServerError)
-		return
-	}
-
-	req, err := http.NewRequest(
-		"POST",
-		"https://api.paystack.co/transaction/initialize",
-		bytes.NewBuffer(jsonBody),
-	)
-	if err != nil {
-		http.Error(w, "Failed to create request", http.StatusInternalServerError)
-		return
-	}
-	req.Header.Set("Authorization", "Bearer "+ph.config.PaystackSecretKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	response, err := client.Do(req)
-	if err != nil {
-		http.Error(w, "Failed to send request", http.StatusInternalServerError)
-		return
-	}
-
-	var paymentInitailizationRespone models.PaystackInitResponse
-
-	err = json.NewDecoder(response.Body).Decode(&paymentInitailizationRespone)
-	if err != nil {
-		http.Error(w, "Failed to decode response", http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode(paymentInitailizationRespone)
-}
-
 func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Webhook started...")
 	signature := r.Header.Get("X-Paystack-Signature")
 	if signature == "" {
 		http.Error(w, "Missing signature", http.StatusBadRequest)
@@ -118,39 +63,25 @@ func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Re
 	}
 
 	//Update payment history status in the database
-	status := paystackResponse.Data.Status
-	err = ph.ps.UpdatePaymentHistoryStatus(&status)
+	paymentMethod := models.PaymentMethod(paystackResponse.Data.Channel)
+	paymentStatus := models.PaymentStatus(paystackResponse.Data.Status)
+
+	updateReq := &models.UpdatePaymentHistoryRequest{
+		Reference:     &paystackResponse.Data.Reference,
+		Currency:      &paystackResponse.Data.Currency,
+		PaymentMethod: &paymentMethod,
+		PaymentStatus: &paymentStatus,
+	}
+
+	err = ph.ps.UpdatePaymentHistory(updateReq, paystackResponse.Data.Reference)
 
 	//If successful, return 200
 	w.WriteHeader(http.StatusOK)
 	fmt.Println("Payment verified successfully")
 }
 
-func (ph *PaymentHandler) VerifyPayment(w http.ResponseWriter, r *http.Request) {
-	ref := r.URL.Query().Get("reference")
-	//fetch the payment history
-	paymentHistory, err := ph.ps.GetPaymentHistoryByReference(ref)
-	if err != nil {
-		http.Error(w, "Failed to fetch payment history", http.StatusInternalServerError)
-		return
-	}
-	//check status
-	if paymentHistory.PaymentStatus != "success" {
-		http.Error(w, "Payment not successful", http.StatusPaymentRequired)
-		return
-	}
-
-	//return response
-	err = json.NewEncoder(w).Encode(paymentHistory)
-	w.WriteHeader(http.StatusAccepted)
-	if err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
-}
-
 func (ph *PaymentHandler) GetAllPaymentHistoryByUserId(w http.ResponseWriter, r *http.Request) {
-	userId, err := strconv.Atoi(r.PathValue("user-id"))
+	userId, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.Error(w, "Invalid user id", http.StatusBadRequest)
 		return
@@ -188,17 +119,4 @@ func (ph *PaymentHandler) GetPaymentHistoryByReference(w http.ResponseWriter, r 
 		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 	}
 
-}
-
-func (ph *PaymentHandler) AddPaymentHistory(w http.ResponseWriter, r *http.Request) {
-	var paymentHistory models.PaymentHistory
-	err := json.NewDecoder(r.Body).Decode(&paymentHistory)
-	if err != nil {
-		http.Error(w, "Error decoding payment history", http.StatusInternalServerError)
-	}
-
-	_, err = ph.ps.AddPaymentHistory(&paymentHistory)
-	if err != nil {
-		http.Error(w, "Error adding payment history", http.StatusInternalServerError)
-	}
 }
