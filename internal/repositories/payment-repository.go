@@ -22,9 +22,9 @@ func NewImplPaymentRepository(db *sql.DB) *ImplPaymentRepository {
 }
 
 func (pr *ImplPaymentRepository) AddPaymentHistory(paymentHistory *models.PaymentHistory, tx *sql.Tx) (int, error) {
-	query := `INSERT INTO payments_history (order_id, reference, currency, payment_method, amount, payment_status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING payment_id`
+	query := `INSERT INTO payments_history (order_id, user_id, reference, currency, payment_method, amount, payment_status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING payment_id`
 	var paymentId int
-	err := tx.QueryRow(query, paymentHistory.OrderId, paymentHistory.Reference, paymentHistory.Currency, paymentHistory.PaymentMethod, paymentHistory.Amount, paymentHistory.PaymentStatus, paymentHistory.CreatedAt, paymentHistory.UpdatedAt).Scan(&paymentId)
+	err := tx.QueryRow(query, paymentHistory.OrderId, paymentHistory.UserId, paymentHistory.Reference, paymentHistory.Currency, paymentHistory.PaymentMethod, paymentHistory.Amount, paymentHistory.PaymentStatus, paymentHistory.CreatedAt, paymentHistory.UpdatedAt).Scan(&paymentId)
 	return paymentId, err
 }
 
