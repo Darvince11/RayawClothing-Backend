@@ -2,6 +2,7 @@ package services
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"rayaw-api/internal/config"
@@ -21,8 +22,8 @@ func NewPaymentService(pr *repositories.ImplPaymentRepository, config *config.Co
 	return &PaymentService{pr: pr, config: config, client: client}
 }
 
-func (ps *PaymentService) AddPaymentHistory(paymentHistory *models.PaymentHistory) (int, error) {
-	return ps.pr.AddPaymentHistory(paymentHistory)
+func (ps *PaymentService) AddPaymentHistory(paymentHistory *models.PaymentHistory, tx *sql.Tx) (int, error) {
+	return ps.pr.AddPaymentHistory(paymentHistory, tx)
 }
 
 func (ps *PaymentService) GetPaymentHistoryByReference(reference string) (*models.PaymentHistory, error) {
@@ -33,8 +34,8 @@ func (ps *PaymentService) GetAllPaymentHistoryByUserId(userId int) ([]models.Pay
 	return ps.pr.GetAllPaymentHistoryByUserId(userId)
 }
 
-func (ps *PaymentService) UpdatePaymentHistoryStatus(status *string) error {
-	return ps.pr.UpdatePaymentHistoryStatus(status)
+func (ps *PaymentService) UpdatePaymentHistory(updateReq *models.UpdatePaymentHistoryRequest, reference string) error {
+	return ps.pr.UpdatePaymentHistory(updateReq, reference)
 }
 
 func (ps *PaymentService) InitializePayment(email string, amount float64, orderId uuid.UUID) (string, error) {

@@ -1,24 +1,43 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type PaymentMethod string
+type PaymentStatus string
 
 const (
-	PaymentMethodCreditCard  PaymentMethod = "credit_card"
+	PaymentMethodCreditCard  PaymentMethod = "card"
 	PaymentMethodMobileMoney PaymentMethod = "mobile_money"
+)
+
+const (
+	PaymentStatusPending   PaymentStatus = "pending"
+	PaymentStatusCompleted PaymentStatus = "completed"
+	PaymentStatusFailed    PaymentStatus = "failed"
 )
 
 type PaymentHistory struct {
 	Id            int           `json:"id"`
-	OrderId       string        `json:"order_id"`
+	OrderId       uuid.UUID     `json:"order_id"`
+	UserId        int           `json:"user_id"`
 	Reference     string        `json:"reference"`
 	Currency      string        `json:"currency"`
 	PaymentMethod PaymentMethod `json:"payment_method"`
 	Amount        float64       `json:"amount"`
-	PaymentStatus string        `json:"payment_status"`
+	PaymentStatus PaymentStatus `json:"payment_status"`
 	CreatedAt     time.Time     `json:"created_at"`
 	UpdatedAt     time.Time     `json:"updated_at"`
+}
+
+type UpdatePaymentHistoryRequest struct {
+	Reference     *string
+	Currency      *string
+	PaymentMethod *PaymentMethod
+	PaymentStatus *PaymentStatus
 }
 
 type PaymentInit struct {
