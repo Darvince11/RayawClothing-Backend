@@ -43,5 +43,5 @@ func ServerMux(config *config.Config, db *sql.DB, client *http.Client) http.Hand
 	orderRoutes := NewOrderRoutes(mux, orderHandler)
 	orderRoutes.RegisterRoutes()
 
-	return middleware.CorsMiddleware(mux)
+	return middleware.CorsMiddleware(middleware.LoggerMiddleware(mux))
 }
