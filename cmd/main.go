@@ -34,7 +34,10 @@ func main() {
 
 	//start api server
 	port := ":" + cfg.Port
-	handler := http.TimeoutHandler(routes.ServerMux(cfg, db, &client), 20*time.Second, "Request timeout")
+	handler := http.TimeoutHandler(
+		routes.ServerMux(cfg, db, &client),
+		20*time.Second,
+		"Request timeout")
 
 	server := http.Server{
 		Addr:         port,
