@@ -72,7 +72,7 @@ func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Re
 		PaymentMethod: &paymentMethod,
 		PaymentStatus: &paymentStatus,
 	}
-	fmt.Println("reference: ", paystackResponse.Data.Reference)
+	fmt.Println("Updates", updateReq)
 
 	err = ph.ps.UpdatePaymentHistory(updateReq, paystackResponse.Data.Reference)
 
