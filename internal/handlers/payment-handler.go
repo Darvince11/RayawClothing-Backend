@@ -66,15 +66,15 @@ func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Re
 	paymentMethod := models.PaymentMethod(paystackResponse.Data.Channel)
 	paymentStatus := models.PaymentStatus(paystackResponse.Data.Status)
 
-	updateReq := &models.UpdatePaymentHistoryRequest{
+	updateReq := models.UpdatePaymentHistoryRequest{
 		Reference:     &paystackResponse.Data.Reference,
 		Currency:      &paystackResponse.Data.Currency,
 		PaymentMethod: &paymentMethod,
 		PaymentStatus: &paymentStatus,
 	}
-	fmt.Println("Updates", *updateReq)
+	fmt.Println("Updates: ", updateReq)
 
-	err = ph.ps.UpdatePaymentHistory(updateReq, paystackResponse.Data.Reference)
+	err = ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
 
 	//If successful, return 200
 	w.WriteHeader(http.StatusOK)
