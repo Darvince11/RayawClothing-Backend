@@ -8,6 +8,6 @@ import (
 )
 
 type PaymentProcessor interface {
-	InitializePayment(email string, amount float64, orderId uuid.UUID) (string, error)
+	InitializePayment(email string, amount float64, orderId uuid.UUID, reference string) (string, error)
 	AddPaymentHistory(paymentHistory *models.PaymentHistory, tx *sql.Tx) (int, error)
 }

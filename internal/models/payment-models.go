@@ -43,6 +43,7 @@ type UpdatePaymentHistoryRequest struct {
 type PaymentInit struct {
 	Email        string `json:"email"`
 	Amount       int    `json:"amount"`
+	Reference    string `json:"reference"`
 	Callback_Url string `json:"callback_url"`
 }
 

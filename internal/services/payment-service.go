@@ -38,10 +38,11 @@ func (ps *PaymentService) UpdatePaymentHistory(updateReq *models.UpdatePaymentHi
 	return ps.pr.UpdatePaymentHistory(updateReq, reference)
 }
 
-func (ps *PaymentService) InitializePayment(email string, amount float64, orderId uuid.UUID) (string, error) {
+func (ps *PaymentService) InitializePayment(email string, amount float64, orderId uuid.UUID, reference string) (string, error) {
 	paymentInitData := models.PaymentInit{
 		Email:        email,
 		Amount:       int(amount * 100),
+		Reference:    reference,
 		Callback_Url: ps.config.PaystackCallbackUrl + orderId.String(),
 	}
 
