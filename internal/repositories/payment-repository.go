@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"rayaw-api/internal/models"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type PaymentRepository interface {
 	AddPaymentHistory(paymentHistory *models.PaymentHistory, tx *sql.Tx) (int, error)
 	GetPaymentHistoryByReference(reference string) (*models.PaymentHistory, error)
-	UpdatePaymentHistory(updateReq *models.UpdatePaymentHistoryRequest, reference string) error
+	UpdatePaymentHistory(updateReq *models.UpdatePaymentHistoryRequest, reference string) (uuid.UUID, error)
 }
 
 type ImplPaymentRepository struct {
@@ -43,8 +45,14 @@ func (pr *ImplPaymentRepository) GetPaymentHistoryByReference(reference string) 
 }
 
 func (pr *ImplPaymentRepository) GetAllPaymentHistoryByUserId(userId int) ([]models.PaymentHistory, error) {
-	query := `SELECT (reference, payment_method, amount, payment_status, created_at) FROM PAYMENTS_HISTORY WHERE user_id=$1`
+	query := `SELECT (reference, payment_method, amount, payment_status, created_at)
+	 FROM PAYMENTS_HISTORY 
+	 WHERE user_id=$1`
 	rows, err := pr.db.Query(query, userId)
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
 
 	var PaymentHistory []models.PaymentHistory
 	for rows.Next() {
@@ -55,10 +63,11 @@ func (pr *ImplPaymentRepository) GetAllPaymentHistoryByUserId(userId int) ([]mod
 	return PaymentHistory, err
 }
 
-func (pr *ImplPaymentRepository) UpdatePaymentHistory(updateReq *models.UpdatePaymentHistoryRequest, reference string) error {
+func (pr *ImplPaymentRepository) UpdatePaymentHistory(updateReq *models.UpdatePaymentHistoryRequest, reference string) (uuid.UUID, error) {
 	clauses := []string{}
 	args := []any{}
 	argIndex := 1
+	var orderId uuid.UUID
 
 	if updateReq.Currency != nil {
 		clauses = append(clauses, fmt.Sprintf("currency = $%d", argIndex))
@@ -77,7 +86,7 @@ func (pr *ImplPaymentRepository) UpdatePaymentHistory(updateReq *models.UpdatePa
 	}
 
 	if len(clauses) == 0 {
-		return nil // No fields to update
+		return uuid.Nil, nil // No fields to update
 	}
 
 	args = append(args, reference)
@@ -85,11 +94,12 @@ func (pr *ImplPaymentRepository) UpdatePaymentHistory(updateReq *models.UpdatePa
 
 	query := fmt.Sprint(`
 	UPDATE payments_history
-	SET `, strings.Join(clauses, ", "), fmt.Sprintf("WHERE reference = $%d", argIndex))
+	SET `, strings.Join(clauses, ", "), fmt.Sprintf("WHERE reference = $%d", argIndex), ` RETURNING order_id`)
 
-	_, err := pr.db.Exec(query, args...)
+	row := pr.db.QueryRow(query, args...)
+	err := row.Scan(&orderId)
 	if err != nil {
-		return err
+		return uuid.Nil, err
 	}
-	return nil
+	return orderId, nil
 }

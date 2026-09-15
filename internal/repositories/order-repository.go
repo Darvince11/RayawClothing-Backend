@@ -15,6 +15,7 @@ type OrderRepository interface {
 	AddOrderItems(orderItems *[]models.OrderItem) error
 	GetOrderById(orderId uuid.UUID) (*models.Order, error)
 	GetOrderItemsByOrderId(orderId uuid.UUID) (*[]models.OrderItem, error)
+	UpdateOrderStatus(orderId uuid.UUID, status models.OrderStatus) error
 }
 
 type ImplOrderRepository struct {
@@ -36,6 +37,10 @@ func (r *ImplOrderRepository) GetOrdersByUserId(userId int) (*[]models.Order, er
 	if err != nil {
 		return nil, err
 	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
 	defer rows.Close()
 
 	for rows.Next() {
@@ -94,6 +99,11 @@ func (r *ImplOrderRepository) GetOrderItemsByOrderId(orderIds []uuid.UUID) (*map
 	if err != nil {
 		return nil, err
 	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
 	defer rows.Close()
 
 	for rows.Next() {
@@ -106,4 +116,13 @@ func (r *ImplOrderRepository) GetOrderItemsByOrderId(orderIds []uuid.UUID) (*map
 	}
 	result := utils.GroupItemsById(&orderItems)
 	return &result, nil
+}
+
+func (r *ImplOrderRepository) UpdateOrderStatus(orderId uuid.UUID, status models.OrderStatus) error {
+	query := `UPDATE orders
+		SET order_status = $1
+		WHERE id = $2
+	`
+	_, err := r.db.Exec(query, status, orderId)
+	return err
 }

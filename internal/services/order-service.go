@@ -12,6 +12,13 @@ import (
 	"github.com/google/uuid"
 )
 
+type OrderServiceInterface interface {
+	AddOrder(orderRequest *models.CreateOrderRequest) (*models.AddOrderResponse, error)
+	GetOrdersByUserId(userId int) (*[]models.GetOrderByUserIdResponse, error)
+	GetOrderById(orderId uuid.UUID) (*models.OrderWithItems, error)
+	UpdateOrderStatus(orderId uuid.UUID, status models.OrderStatus) error
+}
+
 type OrderService struct {
 	or               *repositories.ImplOrderRepository
 	pr               repositories.ProductsRepository
@@ -228,4 +235,8 @@ func GenerateReference() (string, error) {
 
 	reference := base64.RawURLEncoding.EncodeToString(bytes)
 	return reference, nil
+}
+
+func (os *OrderService) UpdateOrderStatus(orderId uuid.UUID, status models.OrderStatus) error {
+	return os.or.UpdateOrderStatus(orderId, status)
 }
