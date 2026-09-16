@@ -34,7 +34,7 @@ func (ps *PaymentService) GetAllPaymentHistoryByUserId(userId int) ([]models.Pay
 	return ps.pr.GetAllPaymentHistoryByUserId(userId)
 }
 
-func (ps *PaymentService) UpdatePaymentHistory(updateReq *models.UpdatePaymentHistoryRequest, reference string) error {
+func (ps *PaymentService) UpdatePaymentHistory(updateReq *models.UpdatePaymentHistoryRequest, reference string) (uuid.UUID, error) {
 	return ps.pr.UpdatePaymentHistory(updateReq, reference)
 }
 
