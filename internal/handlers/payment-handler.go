@@ -83,7 +83,7 @@ func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Re
 	}
 
 	//update order status
-	err = ph.os.UpdateOrderStatus(orderId, models.OrderStatus("paid"))
+	err = ph.os.UpdateOrderStatus(orderId, models.OrderStatusPaid)
 	if err != nil {
 		http.Error(w, "Failed to update order status", http.StatusInternalServerError)
 		return
