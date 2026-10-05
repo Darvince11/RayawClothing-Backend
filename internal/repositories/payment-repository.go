@@ -36,7 +36,7 @@ func (pr *ImplPaymentRepository) GetPaymentHistoryByReference(reference string) 
 
 	var paymentHistory models.PaymentHistory
 
-	err := pr.db.QueryRow(query, reference).Scan(&paymentHistory.Id, &paymentHistory.OrderId, &paymentHistory.Reference, &paymentHistory.Currency, &paymentHistory.PaymentMethod, &paymentHistory.Amount, &paymentHistory.PaymentStatus, &paymentHistory.CreatedAt, &paymentHistory.UpdatedAt)
+	err := pr.db.QueryRow(query, reference).Scan(&paymentHistory.Id, &paymentHistory.OrderId, &paymentHistory.UserId, &paymentHistory.Reference, &paymentHistory.Currency, &paymentHistory.PaymentMethod, &paymentHistory.Amount, &paymentHistory.PaymentStatus, &paymentHistory.CreatedAt, &paymentHistory.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -90,11 +90,10 @@ func (pr *ImplPaymentRepository) UpdatePaymentHistory(updateReq *models.UpdatePa
 	}
 
 	args = append(args, reference)
-	argIndex++
 
 	query := fmt.Sprint(`
 	UPDATE payments_history
-	SET `, strings.Join(clauses, ", "), fmt.Sprintf("WHERE reference = $%d", argIndex), ` RETURNING order_id`)
+	SET `, strings.Join(clauses, `, `), fmt.Sprintf(` WHERE reference = $%d`, argIndex), ` RETURNING order_id`)
 
 	row := pr.db.QueryRow(query, args...)
 	err := row.Scan(&orderId)
