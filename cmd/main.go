@@ -16,7 +16,6 @@ func main() {
 	//load config
 	cfg := config.Init()
 	//connect to database
-	fmt.Println("Connecting to database...")
 	db, err := sql.Open("postgres", cfg.DbUrl)
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
@@ -26,18 +25,9 @@ func main() {
 		log.Fatal("Error pinging database:", err)
 	}
 
-	//create client
-	client := http.Client{
-		Timeout: 20 * time.Second,
-	}
-	defer client.CloseIdleConnections()
-
 	//start api server
 	port := ":" + cfg.Port
-	handler := http.TimeoutHandler(
-		routes.ServerMux(cfg, db, &client),
-		20*time.Second,
-		"Request timeout")
+	handler := http.TimeoutHandler(routes.ServerMux(cfg, db), 20*time.Second, "Request timeout")
 
 	server := http.Server{
 		Addr:         port,
