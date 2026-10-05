@@ -15,6 +15,6 @@ func NewAuthRoutes(mux *http.ServeMux, authHandler *handlers.AuthenticationHandl
 }
 
 func (a *AuthRoutes) RegisterRoutes() {
-	a.mux.HandleFunc("/signup", a.authHandler.SignUpHandler)
-	a.mux.HandleFunc("/login", a.authHandler.LoginHandler)
+	a.mux.HandleFunc("POST /signup", a.authHandler.SignUpHandler)
+	a.mux.HandleFunc("POST /login", a.authHandler.LoginHandler)
 }

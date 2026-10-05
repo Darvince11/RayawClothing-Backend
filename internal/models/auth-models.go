@@ -3,13 +3,13 @@ package models
 import "time"
 
 type User struct {
-	Id            int
-	First_name    string
-	Last_name     string
-	Email         string
-	Phone_number  string
-	User_password string
-	Created_at    time.Time
+	Id            int       `json:"id"`
+	First_name    string    `json:"first_name"`
+	Last_name     string    `json:"last_name"`
+	Email         string    `json:"email"`
+	Phone_number  string    `json:"phone_number"`
+	User_password string    `json:"user_password"`
+	Created_at    time.Time `json:"created_at"`
 }
 
 type SignUpRequest struct {
@@ -20,12 +20,7 @@ type SignUpRequest struct {
 	User_password string `json:"user_password"`
 }
 
-type LoginResponse struct {
-	Id            int    `json:"id"`
-	First_name    string `json:"first_name"`
-	Last_name     string `json:"last_name"`
+type LoginRequest struct {
 	Email         string `json:"email"`
-	Phone_number  string `json:"phone_number"`
-	Access_token  string `json:"access_token"`
-	Refresh_token string `json:"refresh_tokens"`
+	User_password string `json:"user_password"`
 }

@@ -10,7 +10,7 @@ import (
 	"rayaw-api/internal/services"
 )
 
-func ServerMux(config *config.Config, db *sql.DB) http.Handler {
+func ServerMux(config *config.Config, db *sql.DB, client *http.Client) http.Handler {
 	mux := http.NewServeMux()
 
 	//Handle auth
@@ -22,5 +22,26 @@ func ServerMux(config *config.Config, db *sql.DB) http.Handler {
 	authRoutes := NewAuthRoutes(mux, authHandlers)
 	authRoutes.RegisterRoutes()
 
-	return middleware.CorsMiddleware(mux)
+	//Handle products
+	productRepo := repositories.NewProductsRepository(db)
+	productService := services.NewProductService(productRepo)
+	productHandlers := handlers.NewProductsHandler(productService)
+	productRoutes := NewProductsRoutes(mux, productHandlers)
+	productRoutes.RegisterRoutes()
+
+	//Handle payments
+	paymentRepo := repositories.NewImplPaymentRepository(db)
+	paymentService := services.NewPaymentService(paymentRepo, config, client)
+	paymentHandler := handlers.NewPaymentHandler(paymentService, config)
+	paymentRoutes := NewPaymentRoutes(mux, paymentHandler)
+	paymentRoutes.RegisterRoutes()
+
+	//Handle orders
+	orderRepo := repositories.NewOrderRepository(db)
+	orderService := services.NewOrderService(orderRepo, productRepo, db, paymentService)
+	orderHandler := handlers.NewOrderHandler(orderService)
+	orderRoutes := NewOrderRoutes(mux, orderHandler)
+	orderRoutes.RegisterRoutes()
+
+	return middleware.CorsMiddleware(middleware.LoggerMiddleware(mux))
 }

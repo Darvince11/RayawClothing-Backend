@@ -17,8 +17,8 @@ func TestAuthRepo(t *testing.T) {
 	user := models.User{
 		First_name:    "Kafui",
 		Last_name:     "Dotse",
-		Email:         "kafu@gmail.com",
-		Phone_number:  "02331231312",
+		Email:         "kafui21h@gmail.com",
+		Phone_number:  "0233202897809",
 		User_password: "123456",
 	}
 
@@ -35,4 +35,9 @@ func TestAuthRepo(t *testing.T) {
 	}
 
 	t.Log(result)
+
+	err = authRepo.UpdateUser(userId, &user)
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
 }

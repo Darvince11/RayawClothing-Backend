@@ -19,12 +19,21 @@ func SetupTestDB(t *testing.T) *sql.DB {
 	}
 
 	dbUrl := os.Getenv("DATABASE_URL")
+	if dbUrl == "" {
+		t.Fatal("DATABASE_URL is not set in the environment")
+	}
 
 	//connect to db
 	db, err := sql.Open("postgres", dbUrl)
 	if err != nil {
-		t.Fatalf("expected no error, got:%v", err)
+		t.Fatalf("expected no error connecting to database, got:%v", err)
 	}
 
+	err = db.Ping()
+	if err != nil {
+		t.Fatalf("Failed to ping database: %v", err)
+	}
+
+	t.Log("Database connection has been setup successfully")
 	return db
 }

@@ -9,6 +9,7 @@ type TokenRepository interface {
 	AddRefreshToken(refreshToken *models.RefreshToken) error
 	GetRefreshToken(refreshTokenString string) (*models.RefreshToken, error)
 	UpdateRefreshToken(oldRefreshTokenString string, newRefreshToken *models.RefreshToken) error
+	GetRefreshTokenByUserId(userId int) (*models.RefreshToken, error)
 }
 
 type ImplTokenRepository struct {
@@ -41,4 +42,11 @@ func (tr *ImplTokenRepository) UpdateRefreshToken(oldRefreshTokenString string, 
 	`
 	_, err := tr.db.Exec(query, newRefreshToken.Token, newRefreshToken.Expiry, newRefreshToken.Revoked, newRefreshToken.Created_at, oldRefreshTokenString)
 	return err
+}
+
+func (tr *ImplTokenRepository) GetRefreshTokenByUserId(userId int) (*models.RefreshToken, error) {
+	query := `SELECT * FROM refresh_tokens WHERE user_id=$1`
+	var refreshToken models.RefreshToken
+	err := tr.db.QueryRow(query, userId).Scan(&refreshToken.Id, &refreshToken.UserId, &refreshToken.Token, &refreshToken.Expiry, &refreshToken.Revoked, &refreshToken.Created_at)
+	return &refreshToken, err
 }

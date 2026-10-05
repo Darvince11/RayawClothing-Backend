@@ -34,6 +34,25 @@ func (as *AuthService) Register(signUpRequest *models.SignUpRequest) (int, error
 	return newUserId, err
 }
 
+func (as *AuthService) Login(loginRequest *models.LoginRequest) (*models.User, error) {
+	// check if user exists
+	user, err := as.authRepo.GetUserByEmail(loginRequest.Email)
+
+	if err != nil {
+		return nil, errors.New("user does not exist")
+	}
+
+	if user.User_password != loginRequest.User_password {
+		return nil, errors.New("wrong password")
+	}
+
+	return user, nil
+}
+
 func (as *AuthService) GetUserByEmail(email string) (*models.User, error) {
 	return as.authRepo.GetUserByEmail(email)
+}
+
+func (as *AuthService) UpadateUser(id int, user *models.User) error {
+	return as.authRepo.UpdateUser(id, user)
 }
