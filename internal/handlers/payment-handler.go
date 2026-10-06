@@ -63,6 +63,7 @@ func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	fmt.Println(paystackResponse)
 	//Update payment history status in the database
 	paymentMethod := models.PaymentMethod(paystackResponse.Data.Channel)
 	paymentStatus := models.PaymentStatus(paystackResponse.Data.Status)
