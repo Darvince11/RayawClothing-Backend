@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"crypto/hmac"
+	"crypto/sha512"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"rayaw-api/internal/config"
 	"rayaw-api/internal/models"
@@ -22,56 +26,57 @@ func NewPaymentHandler(ps *services.PaymentService, config *config.Config) *Paym
 
 func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Webhook started...")
-	// signature := r.Header.Get("X-Paystack-Signature")
-	// if signature == "" {
-	// 	http.Error(w, "Missing signature", http.StatusBadRequest)
-	// 	return
-	// }
+	signature := r.Header.Get("X-Paystack-Signature")
+	if signature == "" {
+		http.Error(w, "Missing signature", http.StatusBadRequest)
+		return
+	}
 
-	// paystackResByte, err := io.ReadAll(r.Body)
-	// if err != nil {
-	// 	http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-	// 	return
-	// }
+	paystackResByte, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
 
-	// //Verify payment signature
-	// mac := hmac.New(sha512.New, []byte(ph.config.PaystackSecretKey))
-	// _, err = mac.Write(paystackResByte)
-	// if err != nil {
-	// 	http.Error(w, "Failed to write HMAC", http.StatusInternalServerError)
-	// 	return
-	// }
-	// expectedSignatureByte := mac.Sum(nil)
+	//Verify payment signature
+	mac := hmac.New(sha512.New, []byte(ph.config.PaystackSecretKey))
+	_, err = mac.Write(paystackResByte)
+	if err != nil {
+		http.Error(w, "Failed to write HMAC", http.StatusInternalServerError)
+		return
+	}
+	expectedSignatureByte := mac.Sum(nil)
 
-	// expectedSignature := hex.EncodeToString(expectedSignatureByte)
+	expectedSignature := hex.EncodeToString(expectedSignatureByte)
 
-	// if signature != expectedSignature {
-	// 	http.Error(w, "Invalid signature", http.StatusBadRequest)
-	// 	return
-	// }
+	if signature != expectedSignature {
+		http.Error(w, "Invalid signature", http.StatusBadRequest)
+		return
+	}
 
-	// //Parse the payment details from paystack into a variable
-	// var paystackResponse models.PaystackVerifyResponse
+	//Parse the payment details from paystack into a variable
+	var paystackResponse models.PaystackVerifyResponse
 
-	// err = json.Unmarshal(paystackResByte, &paystackResponse)
-	// if err != nil {
-	// 	http.Error(w, "Failed to unmarshal paystack response", http.StatusInternalServerError)
-	// 	return
-	// }
+	err = json.Unmarshal(paystackResByte, &paystackResponse)
+	if err != nil {
+		http.Error(w, "Failed to unmarshal paystack response", http.StatusInternalServerError)
+		return
+	}
 
-	// fmt.Println(paystackResponse)
-	// //Update payment history status in the database
-	// paymentMethod := models.PaymentMethod(paystackResponse.Data.Channel)
-	// paymentStatus := models.PaymentStatus(paystackResponse.Data.Status)
+	fmt.Println(paystackResponse)
+	//Update payment history status in the database
+	paymentMethod := models.PaymentMethod(paystackResponse.Data.Channel)
+	paymentStatus := models.PaymentStatus(paystackResponse.Data.Status)
 
-	// updateReq := models.UpdatePaymentHistoryRequest{
-	// 	Reference:     &paystackResponse.Data.Reference,
-	// 	Currency:      &paystackResponse.Data.Currency,
-	// 	PaymentMethod: &paymentMethod,
-	// 	PaymentStatus: &paymentStatus,
-	// }
-	// fmt.Println("Updates: ", *(updateReq.Currency), *(updateReq.PaymentMethod), *(updateReq.PaymentStatus))
+	updateReq := models.UpdatePaymentHistoryRequest{
+		Reference:     &paystackResponse.Data.Reference,
+		Currency:      &paystackResponse.Data.Currency,
+		PaymentMethod: &paymentMethod,
+		PaymentStatus: &paymentStatus,
+	}
+	fmt.Println("Updates: ", *(updateReq.Currency), *(updateReq.PaymentMethod), *(updateReq.PaymentStatus))
 
+	go VerifyPaymentEvents(ph, w, updateReq, &paystackResponse)
 	// orderId, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
 
 	// if err != nil {
@@ -130,4 +135,20 @@ func (ph *PaymentHandler) GetPaymentHistoryByReference(w http.ResponseWriter, r 
 		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 	}
 
+}
+
+func VerifyPaymentEvents(ph *PaymentHandler, w http.ResponseWriter, updateReq models.UpdatePaymentHistoryRequest, paystackResponse *models.PaystackVerifyResponse) {
+	orderId, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
+
+	if err != nil {
+		http.Error(w, "Failed to update payment history", http.StatusInternalServerError)
+		return
+	}
+
+	//update order status
+	err = ph.os.UpdateOrderStatus(orderId, models.OrderStatusPaid)
+	if err != nil {
+		http.Error(w, "Failed to update order status", http.StatusInternalServerError)
+		return
+	}
 }
