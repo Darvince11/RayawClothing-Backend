@@ -7,13 +7,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"rayaw-api/internal/config"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/services"
 	"strconv"
-
-	"github.com/google/uuid"
 )
 
 type PaymentHandler struct {
@@ -78,7 +77,7 @@ func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Re
 	}
 	fmt.Println("Updates: ", *(updateReq.Currency), *(updateReq.PaymentMethod), *(updateReq.PaymentStatus))
 
-	go VerifyPaymentEvents(ph, w, updateReq, &paystackResponse)
+	go VerifyPaymentEvents(ph, updateReq, &paystackResponse)
 	// orderId, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
 
 	// if err != nil {
@@ -139,18 +138,18 @@ func (ph *PaymentHandler) GetPaymentHistoryByReference(w http.ResponseWriter, r 
 
 }
 
-func VerifyPaymentEvents(ph *PaymentHandler, w http.ResponseWriter, updateReq models.UpdatePaymentHistoryRequest, paystackResponse *models.PaystackVerifyResponse) {
-	// orderId, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
+func VerifyPaymentEvents(ph *PaymentHandler, updateReq models.UpdatePaymentHistoryRequest, paystackResponse *models.PaystackVerifyResponse) {
+	_, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
 
-	// if err != nil {
-	// 	http.Error(w, "Failed to update payment history", http.StatusInternalServerError)
-	// 	return
-	// }
-
-	//update order status
-	err := ph.os.UpdateOrderStatus(uuid.MustParse("7427199a-376f-4aa9-adac-ee69c8c4677b"), models.OrderStatusPaid)
 	if err != nil {
-		http.Error(w, "Failed to update order status", http.StatusInternalServerError)
+		log.Printf("Failed to update payment history: %v", err)
 		return
 	}
+
+	//update order status
+	// err := ph.os.UpdateOrderStatus(uuid.MustParse("7427199a-376f-4aa9-adac-ee69c8c4677b"), models.OrderStatusPaid)
+	// if err != nil {
+	// 	log.Printf("Failed to update order status: %v", err)
+	// 	return
+	// }
 }
