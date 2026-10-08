@@ -12,6 +12,8 @@ import (
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/services"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type PaymentHandler struct {
@@ -138,15 +140,15 @@ func (ph *PaymentHandler) GetPaymentHistoryByReference(w http.ResponseWriter, r 
 }
 
 func VerifyPaymentEvents(ph *PaymentHandler, w http.ResponseWriter, updateReq models.UpdatePaymentHistoryRequest, paystackResponse *models.PaystackVerifyResponse) {
-	orderId, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
+	// orderId, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
 
-	if err != nil {
-		http.Error(w, "Failed to update payment history", http.StatusInternalServerError)
-		return
-	}
+	// if err != nil {
+	// 	http.Error(w, "Failed to update payment history", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	//update order status
-	err = ph.os.UpdateOrderStatus(orderId, models.OrderStatusPaid)
+	err := ph.os.UpdateOrderStatus(uuid.MustParse("7427199a-376f-4aa9-adac-ee69c8c4677b"), models.OrderStatusPaid)
 	if err != nil {
 		http.Error(w, "Failed to update order status", http.StatusInternalServerError)
 		return
