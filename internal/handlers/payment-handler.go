@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"rayaw-api/internal/config"
 	"rayaw-api/internal/models"
@@ -139,12 +138,12 @@ func (ph *PaymentHandler) GetPaymentHistoryByReference(w http.ResponseWriter, r 
 }
 
 func VerifyPaymentEvents(ph *PaymentHandler, updateReq models.UpdatePaymentHistoryRequest, paystackResponse *models.PaystackVerifyResponse) {
-	_, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
+	// _, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
 
-	if err != nil {
-		log.Printf("Failed to update payment history: %v", err)
-		return
-	}
+	// if err != nil {
+	// 	log.Printf("Failed to update payment history: %v", err)
+	// 	return
+	// }
 
 	//update order status
 	// err := ph.os.UpdateOrderStatus(uuid.MustParse("7427199a-376f-4aa9-adac-ee69c8c4677b"), models.OrderStatusPaid)
