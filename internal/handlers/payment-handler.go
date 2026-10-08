@@ -76,19 +76,19 @@ func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Re
 	}
 	fmt.Println("Updates: ", *(updateReq.Currency), *(updateReq.PaymentMethod), *(updateReq.PaymentStatus))
 
-	_, err = ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
+	orderId, err := ph.ps.UpdatePaymentHistory(&updateReq, paystackResponse.Data.Reference)
 
 	if err != nil {
 		http.Error(w, "Failed to update payment history", http.StatusInternalServerError)
 		return
 	}
 
-	// //update order status
-	// err = ph.os.UpdateOrderStatus(orderId, models.OrderStatusPaid)
-	// if err != nil {
-	// 	http.Error(w, "Failed to update order status", http.StatusInternalServerError)
-	// 	return
-	// }
+	//update order status
+	err = ph.os.UpdateOrderStatus(orderId, models.OrderStatusPaid)
+	if err != nil {
+		http.Error(w, "Failed to update order status", http.StatusInternalServerError)
+		return
+	}
 
 	//If successful, return 200
 	w.WriteHeader(http.StatusOK)
