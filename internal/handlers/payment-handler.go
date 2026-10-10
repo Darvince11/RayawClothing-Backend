@@ -24,6 +24,10 @@ func NewPaymentHandler(ps *services.PaymentService, config *config.Config) *Paym
 	return &PaymentHandler{ps: ps, config: config}
 }
 
+func (ph *PaymentHandler) SetPaymentService(os services.OrderServiceInterface) {
+	ph.os = os
+}
+
 func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Webhook started...")
 	signature := r.Header.Get("X-Paystack-Signature")
