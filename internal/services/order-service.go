@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
-	"fmt"
 	"rayaw-api/internal/interfaces"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/repositories"
@@ -239,6 +238,5 @@ func GenerateReference() (string, error) {
 }
 
 func (os *OrderService) UpdateOrderStatus(orderId uuid.UUID, status models.OrderStatus) error {
-	fmt.Println("Order service")
 	return os.or.UpdateOrderStatus(orderId, status)
 }

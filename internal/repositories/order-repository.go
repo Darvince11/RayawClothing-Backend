@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
 	"rayaw-api/internal/models"
 	"rayaw-api/utils"
 
@@ -120,7 +119,6 @@ func (r *ImplOrderRepository) GetOrderItemsByOrderId(orderIds []uuid.UUID) (*map
 }
 
 func (r *ImplOrderRepository) UpdateOrderStatus(orderId uuid.UUID, status models.OrderStatus) error {
-	fmt.Println("Order repository")
 	query := `UPDATE orders
 		SET order_status = $1
 		WHERE id = $2
