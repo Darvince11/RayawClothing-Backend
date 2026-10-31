@@ -1,3 +1,3 @@
-DROP TABLE IF EXISTS users_refresh_token CASCADE;
+DROP TABLE IF EXISTS refresh_tokens CASCADE;
 
 DROP TABLE IF EXISTS users CASCADE;

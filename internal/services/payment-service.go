@@ -2,12 +2,16 @@ package services
 
 import (
 	"bytes"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"rayaw-api/internal/config"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/repositories"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -31,6 +35,7 @@ func (ps *PaymentService) GetPaymentHistoryByReference(reference string) (*model
 }
 
 func (ps *PaymentService) GetAllPaymentHistoryByUserId(userId int) ([]models.PaymentHistory, error) {
+	fmt.Println("Service user Id: ", userId)
 	return ps.pr.GetAllPaymentHistoryByUserId(userId)
 }
 
@@ -74,4 +79,18 @@ func (ps *PaymentService) InitializePayment(email string, amount float64, orderI
 		return "", err
 	}
 	return paymentInitailizationRespone.Data.AuthorizationURL, nil
+}
+
+func (ps *PaymentService) GeneratePaymentId() (string, error) {
+	paymentId := "RW"
+	timestamp := time.Now().Unix()
+	var randomBytes [2]byte
+
+	_, err := rand.Read(randomBytes[:])
+	if err != nil {
+		return "", err
+	}
+
+	randomStr := hex.EncodeToString(randomBytes[:])
+	return fmt.Sprintf("%s-%d-%s", paymentId, timestamp, randomStr), nil
 }

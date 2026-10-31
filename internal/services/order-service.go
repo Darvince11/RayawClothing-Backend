@@ -5,9 +5,11 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
+	"encoding/hex"
 	"rayaw-api/internal/interfaces"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/repositories"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -47,7 +49,13 @@ func (os *OrderService) AddOrder(orderRequest *models.CreateOrderRequest) (*mode
 		totalAmount += (product.Price * float64(orderRequest.Products[index].Quantity))
 	}
 
+	orderIdStr, err := generateOrderId()
+	if err != nil {
+		return nil, err
+	}
+
 	order := &models.Order{
+		OrderId:     orderIdStr,
 		UserId:      orderRequest.UserId,
 		TotalAmount: totalAmount,
 		OrderStatus: models.OrderStatusPending,
@@ -58,7 +66,7 @@ func (os *OrderService) AddOrder(orderRequest *models.CreateOrderRequest) (*mode
 		return nil, err
 	}
 
-	orderId, err := os.or.AddOrder(order, tx)
+	Id, err := os.or.AddOrder(order, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +75,7 @@ func (os *OrderService) AddOrder(orderRequest *models.CreateOrderRequest) (*mode
 	orderItems := []models.OrderItem{}
 	for _, product := range orderRequest.Products {
 		orderItem := models.OrderItem{
-			OrderId:   orderId,
+			OrderId:   Id,
 			ProductId: product.ProdctID,
 			Quantity:  product.Quantity,
 		}
@@ -84,8 +92,14 @@ func (os *OrderService) AddOrder(orderRequest *models.CreateOrderRequest) (*mode
 		return nil, err
 	}
 
+	paymentId, err := os.paymentProcessor.GeneratePaymentId()
+	if err != nil {
+		return nil, err
+	}
+
 	paymentHistory := &models.PaymentHistory{
-		OrderId:       orderId,
+		PaymentId:     paymentId,
+		OrderId:       Id,
 		UserId:        orderRequest.UserId,
 		Reference:     reference,
 		Amount:        totalAmount,
@@ -103,13 +117,13 @@ func (os *OrderService) AddOrder(orderRequest *models.CreateOrderRequest) (*mode
 	}
 
 	// initialize payment
-	authUrl, err := os.paymentProcessor.InitializePayment(orderRequest.Email, totalAmount, orderId, reference)
+	authUrl, err := os.paymentProcessor.InitializePayment(orderRequest.Email, totalAmount, Id, reference)
 	if err != nil {
 		return nil, err
 	}
 
 	return &models.AddOrderResponse{
-		OrderId:          orderId,
+		OrderId:          Id,
 		AuthorizationUrl: authUrl,
 	}, nil
 }
@@ -134,7 +148,7 @@ func (os *OrderService) GetOrdersByUserId(userId int) (*[]models.GetOrderByUserI
 
 	//create a list of product ids
 	var productIds []int
-	for key, _ := range *orderItems {
+	for key := range *orderItems {
 		for _, item := range (*orderItems)[key] {
 			productIds = append(productIds, item.ProductId)
 		}
@@ -163,6 +177,7 @@ func (os *OrderService) GetOrdersByUserId(userId int) (*[]models.GetOrderByUserI
 	for _, order := range *orders {
 		orderResponse := models.GetOrderByUserIdResponse{
 			Id:              order.Id,
+			OrderId:         order.OrderId,
 			UserId:          order.UserId,
 			TotalAmount:     order.TotalAmount,
 			OrderStatus:     order.OrderStatus,
@@ -226,6 +241,10 @@ func (os *OrderService) GetOrderById(orderId uuid.UUID) (*models.OrderWithItems,
 	return orderWithItems, nil
 }
 
+func (os *OrderService) UpdateOrderStatus(orderId uuid.UUID, status models.OrderStatus) error {
+	return os.or.UpdateOrderStatus(orderId, status)
+}
+
 func GenerateReference() (string, error) {
 	bytes := make([]byte, 8)
 	_, err := rand.Read(bytes)
@@ -237,6 +256,18 @@ func GenerateReference() (string, error) {
 	return reference, nil
 }
 
-func (os *OrderService) UpdateOrderStatus(orderId uuid.UUID, status models.OrderStatus) error {
-	return os.or.UpdateOrderStatus(orderId, status)
+func generateOrderId() (string, error) {
+	idList := []string{"OD"}
+	var randBytes [4]byte
+	_, err := rand.Read(randBytes[:])
+
+	if err != nil {
+		return "", err
+	}
+
+	randStr := hex.EncodeToString(randBytes[:])
+	randStr = strings.ToUpper(randStr)
+	idList = append(idList, randStr[0:4], randStr[4:])
+
+	return strings.Join(idList, "-"), nil
 }

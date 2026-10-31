@@ -24,11 +24,11 @@ func NewImplPaymentRepository(db *sql.DB) *ImplPaymentRepository {
 }
 
 func (pr *ImplPaymentRepository) AddPaymentHistory(paymentHistory *models.PaymentHistory, tx *sql.Tx) (int, error) {
-	query := `INSERT INTO payments_history (order_id, user_id, reference, currency, payment_method, amount, payment_status, created_at, updated_at) 
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING payment_id`
-	var paymentId int
-	err := tx.QueryRow(query, paymentHistory.OrderId, paymentHistory.UserId, paymentHistory.Reference, paymentHistory.Currency, paymentHistory.PaymentMethod, paymentHistory.Amount, paymentHistory.PaymentStatus, paymentHistory.CreatedAt, paymentHistory.UpdatedAt).Scan(&paymentId)
-	return paymentId, err
+	query := `INSERT INTO payments_history (payment_id, order_id, user_id, reference, currency, payment_method, amount, payment_status) 
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
+	var Id int
+	err := tx.QueryRow(query, paymentHistory.PaymentId, paymentHistory.OrderId, paymentHistory.UserId, paymentHistory.Reference, paymentHistory.Currency, paymentHistory.PaymentMethod, paymentHistory.Amount, paymentHistory.PaymentStatus).Scan(&Id)
+	return Id, err
 }
 
 func (pr *ImplPaymentRepository) GetPaymentHistoryByReference(reference string) (*models.PaymentHistory, error) {
@@ -45,9 +45,10 @@ func (pr *ImplPaymentRepository) GetPaymentHistoryByReference(reference string) 
 }
 
 func (pr *ImplPaymentRepository) GetAllPaymentHistoryByUserId(userId int) ([]models.PaymentHistory, error) {
-	query := `SELECT (reference, payment_method, amount, payment_status, created_at)
+	query := `SELECT id, payment_id, user_id, reference, payment_method, amount, payment_status, created_at
 	 FROM PAYMENTS_HISTORY 
 	 WHERE user_id=$1`
+	fmt.Println("Repository user Id: ", userId)
 	rows, err := pr.db.Query(query, userId)
 
 	if rows.Err() != nil {
@@ -57,9 +58,10 @@ func (pr *ImplPaymentRepository) GetAllPaymentHistoryByUserId(userId int) ([]mod
 	var PaymentHistory []models.PaymentHistory
 	for rows.Next() {
 		var paymentHistory models.PaymentHistory
-		rows.Scan(&paymentHistory.Reference, &paymentHistory.PaymentMethod, &paymentHistory.Amount, &paymentHistory.PaymentStatus, &paymentHistory.CreatedAt)
+		rows.Scan(&paymentHistory.Id, &paymentHistory.PaymentId, &paymentHistory.UserId, &paymentHistory.Reference, &paymentHistory.PaymentMethod, &paymentHistory.Amount, &paymentHistory.PaymentStatus, &paymentHistory.CreatedAt)
 		PaymentHistory = append(PaymentHistory, paymentHistory)
 	}
+	fmt.Println(PaymentHistory)
 	return PaymentHistory, err
 }
 

@@ -99,6 +99,7 @@ func (ph *PaymentHandler) VerifyPaymentWebhook(w http.ResponseWriter, r *http.Re
 
 func (ph *PaymentHandler) GetAllPaymentHistoryByUserId(w http.ResponseWriter, r *http.Request) {
 	userId, err := strconv.Atoi(r.PathValue("id"))
+	fmt.Println("User ID:", userId)
 	if err != nil {
 		http.Error(w, "Invalid user id", http.StatusBadRequest)
 		return

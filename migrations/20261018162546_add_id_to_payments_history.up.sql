@@ -1,0 +1,2 @@
+ALTER TABLE payments_history
+ADD id SERIAL PRIMARY KEY;

@@ -94,10 +94,9 @@ func (ts *TokenService) RevokeRefreshToken(token string) error {
 	}
 
 	revokedToken := models.RefreshToken{
-		Token:      oldToken.Token,
-		Expiry:     oldToken.Expiry,
-		Revoked:    true,
-		Created_at: time.Now(),
+		Token:   oldToken.Token,
+		Expiry:  oldToken.Expiry,
+		Revoked: true,
 	}
 	err = ts.tokenRepo.UpdateRefreshToken(token, &revokedToken)
 	return err
@@ -109,4 +108,12 @@ func (ts *TokenService) StoreRefreshToken(refreshToken *models.RefreshToken) err
 
 func (ts *TokenService) GetRefreshTokenById(userId int) (*models.RefreshToken, error) {
 	return ts.tokenRepo.GetRefreshTokenByUserId(userId)
+}
+
+func (ts *TokenService) GetRefreshToken(token string) (*models.RefreshToken, error) {
+	return ts.tokenRepo.GetRefreshToken(token)
+}
+
+func (ts *TokenService) UpdateRefreshTokenByUserId(userID int, refreshToken *models.RefreshToken) error {
+	return ts.tokenRepo.UpdateRefreshTokenByUserId(userID, refreshToken)
 }
