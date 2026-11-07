@@ -46,5 +46,5 @@ func ServerMux(config *config.Config, db *sql.DB, client *http.Client) http.Hand
 	//set payment service with order service
 	paymentHandler.SetPaymentService(orderService)
 
-	return middleware.CorsMiddleware(middleware.LoggerMiddleware(mux))
+	return middleware.CorsMiddleware(middleware.AuthenticationMiddleware(middleware.LoggerMiddleware(mux), tokenService))
 }
