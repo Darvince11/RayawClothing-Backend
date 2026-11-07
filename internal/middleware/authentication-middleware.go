@@ -15,6 +15,8 @@ func AuthenticationMiddleware(next http.Handler, authInterface interfaces.AuthIn
 			"/signup",
 			"/auth/refresh",
 			"/payment-verify-webhook",
+			"/products",
+			"/products/{id}",
 		}
 
 		if !slices.Contains(allowed, r.URL.Path) {
