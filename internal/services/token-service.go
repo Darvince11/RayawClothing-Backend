@@ -34,6 +34,7 @@ func (ts *TokenService) GenerateAccesToken(role string, exp time.Duration) (stri
 	return signedToken, err
 }
 
+// Returns a jwt claim when token expires
 func (ts *TokenService) ValidateAccessToken(tokenString string) (*jwt.MapClaims, error) {
 	//Validate jwt
 	//Extract the claims
