@@ -26,6 +26,7 @@ type CreateOrderRequest struct {
 
 type Order struct {
 	Id          uuid.UUID   `json:"id"`
+	OrderId     string      `json:"order_id"`
 	UserId      int         `json:"user_id"`
 	TotalAmount float64     `json:"total_amount"`
 	OrderStatus OrderStatus `json:"order_status"`
@@ -63,6 +64,7 @@ type AddOrderResponse struct {
 
 type GetOrderByUserIdResponse struct {
 	Id              uuid.UUID   `json:"id"`
+	OrderId         string      `json:"order_id"`
 	UserId          int         `json:"user_id"`
 	TotalAmount     float64     `json:"total_amount"`
 	OrderStatus     OrderStatus `json:"order_status"`

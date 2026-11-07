@@ -16,9 +16,10 @@ func TestTokenRepo(t *testing.T) {
 	tokenRepo := NewTokenRepository(db)
 
 	token := models.RefreshToken{
-		UserId: 1,
-		Token:  "okww2_p0KTiZY3jdYznguYhFKpIAiTypwluflhynLXs",
-		Expiry: time.Now().Add(1800 * time.Second),
+		UserId:  1,
+		Token:   "okww2_p0KTiZY3jdYznguYhFKpIAiTypwluflhynLXs",
+		Expiry:  time.Now().Add(1800 * time.Second),
+		Revoked: false,
 	}
 
 	err := tokenRepo.AddRefreshToken(&token)
@@ -32,4 +33,17 @@ func TestTokenRepo(t *testing.T) {
 	}
 
 	t.Log(result)
+
+	//test update token by user id
+	token = models.RefreshToken{
+		UserId:  1,
+		Token:   "okww2_p0KTiZY3jdYznguYhFKpIAiTypwluflhynLX123",
+		Expiry:  time.Now().Add(1800 * time.Second),
+		Revoked: false,
+	}
+
+	err = tokenRepo.UpdateRefreshTokenByUserId(1, &token)
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
 }

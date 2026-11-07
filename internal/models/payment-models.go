@@ -16,12 +16,13 @@ const (
 
 const (
 	PaymentStatusPending   PaymentStatus = "pending"
-	PaymentStatusCompleted PaymentStatus = "completed"
+	PaymentStatusCompleted PaymentStatus = "success"
 	PaymentStatusFailed    PaymentStatus = "failed"
 )
 
 type PaymentHistory struct {
 	Id            int           `json:"id"`
+	PaymentId     string        `json:"payment_id"`
 	OrderId       uuid.UUID     `json:"order_id"`
 	UserId        int           `json:"user_id"`
 	Reference     string        `json:"reference"`

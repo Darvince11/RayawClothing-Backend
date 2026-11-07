@@ -27,7 +27,7 @@ func NewOrderRepository(db *sql.DB) *ImplOrderRepository {
 }
 
 func (r *ImplOrderRepository) GetOrdersByUserId(userId int) (*[]models.Order, error) {
-	query := `SELECT id, user_id, total_amount, order_status, order_date
+	query := `SELECT id, order_id, user_id, total_amount, order_status, order_date
 	 FROM orders 
 	 WHERE user_id = $1`
 
@@ -45,7 +45,7 @@ func (r *ImplOrderRepository) GetOrdersByUserId(userId int) (*[]models.Order, er
 
 	for rows.Next() {
 		var order models.Order
-		err := rows.Scan(&order.Id, &order.UserId, &order.TotalAmount, &order.OrderStatus, &order.OrderDate)
+		err := rows.Scan(&order.Id, &order.OrderId, &order.UserId, &order.TotalAmount, &order.OrderStatus, &order.OrderDate)
 		if err != nil {
 			return nil, err
 		}
@@ -56,10 +56,10 @@ func (r *ImplOrderRepository) GetOrdersByUserId(userId int) (*[]models.Order, er
 }
 
 func (r *ImplOrderRepository) AddOrder(order *models.Order, tx *sql.Tx) (uuid.UUID, error) {
-	query := `INSERT INTO orders (user_id, total_amount, order_status)
-	 VALUES ($1, $2, $3) RETURNING id`
+	query := `INSERT INTO orders (order_id, user_id, total_amount, order_status)
+	 VALUES ($1, $2, $3, $4) RETURNING id`
 	var id uuid.UUID
-	err := tx.QueryRow(query, order.UserId, order.TotalAmount, order.OrderStatus).Scan(&id)
+	err := tx.QueryRow(query, order.OrderId, order.UserId, order.TotalAmount, order.OrderStatus).Scan(&id)
 	return id, err
 }
 
@@ -77,11 +77,11 @@ func (r *ImplOrderRepository) AddOrderItems(orderItems *[]models.OrderItem, tx *
 }
 
 func (r *ImplOrderRepository) GetOrderById(orderId uuid.UUID) (*models.Order, error) {
-	query := `SELECT id, user_id, total_amount, order_status, order_date
+	query := `SELECT id, order_id, user_id, total_amount, order_status, order_date
 	 FROM orders 
 	 WHERE id = $1`
 	var order models.Order
-	err := r.db.QueryRow(query, orderId).Scan(&order.Id, &order.UserId, &order.TotalAmount, &order.OrderStatus, &order.OrderDate)
+	err := r.db.QueryRow(query, orderId).Scan(&order.Id, &order.OrderId, &order.UserId, &order.TotalAmount, &order.OrderStatus, &order.OrderDate)
 	if err != nil {
 		return nil, err
 	}

@@ -10,6 +10,7 @@ type TokenRepository interface {
 	GetRefreshToken(refreshTokenString string) (*models.RefreshToken, error)
 	UpdateRefreshToken(oldRefreshTokenString string, newRefreshToken *models.RefreshToken) error
 	GetRefreshTokenByUserId(userId int) (*models.RefreshToken, error)
+	UpdateRefreshTokenByUserId(userId int, token *models.RefreshToken) error
 }
 
 type ImplTokenRepository struct {
@@ -37,10 +38,10 @@ func (tr *ImplTokenRepository) GetRefreshToken(refreshTokenString string) (*mode
 
 func (tr *ImplTokenRepository) UpdateRefreshToken(oldRefreshTokenString string, newRefreshToken *models.RefreshToken) error {
 	query := `UPDATE refresh_tokens
-	SET refresh_token=$1, expiry=$2, revoked=$3 created_at=$4
-	WHERE refresh_token=$5
+	SET refresh_token=$1, expiry=$2, revoked=$3
+	WHERE refresh_token=$4
 	`
-	_, err := tr.db.Exec(query, newRefreshToken.Token, newRefreshToken.Expiry, newRefreshToken.Revoked, newRefreshToken.Created_at, oldRefreshTokenString)
+	_, err := tr.db.Exec(query, newRefreshToken.Token, newRefreshToken.Expiry, newRefreshToken.Revoked, oldRefreshTokenString)
 	return err
 }
 
@@ -49,4 +50,14 @@ func (tr *ImplTokenRepository) GetRefreshTokenByUserId(userId int) (*models.Refr
 	var refreshToken models.RefreshToken
 	err := tr.db.QueryRow(query, userId).Scan(&refreshToken.Id, &refreshToken.UserId, &refreshToken.Token, &refreshToken.Expiry, &refreshToken.Revoked, &refreshToken.Created_at)
 	return &refreshToken, err
+}
+
+func (tr *ImplTokenRepository) UpdateRefreshTokenByUserId(userId int, token *models.RefreshToken) error {
+	query := `UPDATE refresh_tokens
+	SET refresh_token=$1, expiry=$2, revoked=$3
+	WHERE user_id=$4
+	`
+
+	_, err := tr.db.Exec(query, token.Token, token.Expiry, token.Revoked, userId)
+	return err
 }

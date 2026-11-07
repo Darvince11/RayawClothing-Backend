@@ -137,12 +137,22 @@ func (ah *AuthenticationHandler) LoginHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	refreshToken, err := ah.tokenService.GetRefreshTokenById(user.Id)
+	//generate refresh token
+	exp := time.Now().Add(time.Duration(utils.RefreshTokenExpiry) * time.Second)
+	refreshToken, err := ah.tokenService.GenerateRefreshToken(user.Id, exp)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Error getting refresh token:", err)
+		fmt.Fprintln(w, "Error generating refresh token:", err)
 		return
 	}
+
+	err = ah.tokenService.UpdateRefreshTokenByUserId(user.Id, refreshToken)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Error updating refresh token: ", err)
+		return
+	}
+
 	//return response
 	res := models.Response[responseData]{
 		Success: true,
@@ -158,6 +168,64 @@ func (ah *AuthenticationHandler) LoginHandler(w http.ResponseWriter, r *http.Req
 	encoder := json.NewEncoder(w)
 	if err := encoder.Encode(res); err != nil {
 		fmt.Println("Error encoding data:", err)
+		return
+	}
+}
+
+func (ah *AuthenticationHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var refreshTokenRequest models.RefreshTokenRequest
+	err := json.NewDecoder(r.Body).Decode(&refreshTokenRequest)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Error decoding body:%v", err)
+		return
+	}
+
+	//get refresh token
+	refreshToken, err := ah.tokenService.GetRefreshToken(refreshTokenRequest.RefreshToken)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Error getting refresh token:%v", err)
+		return
+	}
+
+	// check if refresh token is expired
+	if time.Now().After(refreshToken.Expiry) {
+		fmt.Println("About to revoke token")
+		err := ah.tokenService.RevokeRefreshToken(refreshToken.Token)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error revoking refresh token:%v", err)
+			return
+		}
+		fmt.Println("Token has been revoked")
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Refresh token is expired")
+		return
+	}
+
+	exp := time.Until(time.Now().Add(time.Minute))
+	accessToken, err := ah.tokenService.GenerateAccesToken("user", exp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error generating access token:%v", err)
+		return
+	}
+
+	//response
+	response := models.Response[models.TokenResponse]{
+		Success: true,
+		Data: models.TokenResponse{
+			AccessToken: accessToken,
+		},
+		Message: "Access token successfuly regenerated",
+	}
+
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, "Error encoding response: ", err)
 		return
 	}
 }
