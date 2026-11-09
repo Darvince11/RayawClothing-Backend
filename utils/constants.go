@@ -1,6 +1,6 @@
 package utils
 
 var (
-	AccessTokenExpiry  = 120
+	AccessTokenExpiry  = 300
 	RefreshTokenExpiry = 86400
 )

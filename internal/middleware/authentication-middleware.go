@@ -21,22 +21,19 @@ func AuthenticationMiddleware(next http.Handler, authInterface interfaces.AuthIn
 
 		if !slices.Contains(allowed, r.URL.Path) {
 			authHeader := r.Header.Get("Authorization")
-
 			if authHeader == "" {
 				http.Error(w, "No authorization token was provied", http.StatusUnauthorized)
 				return
 			}
 
 			accessToken := strings.Split(authHeader, " ")[1]
-			fmt.Println(accessToken)
 
-			claims, err := authInterface.ValidateAccessToken(accessToken)
+			_, err := authInterface.ValidateAccessToken(accessToken)
 			if err != nil {
-				http.Error(w, "Error validating access token", http.StatusUnauthorized)
+				http.Error(w, fmt.Sprintf("Error validating access token: %v", err), http.StatusUnauthorized)
 				return
 			}
 
-			fmt.Println(claims)
 		}
 
 		next.ServeHTTP(w, r)
