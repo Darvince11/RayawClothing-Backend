@@ -7,6 +7,7 @@ import (
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/services"
 	"rayaw-api/utils"
+	"strings"
 	"time"
 )
 
@@ -45,6 +46,8 @@ func (ah *AuthenticationHandler) SignUpHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	newUser.First_name = strings.ToLower(newUser.First_name)
+	newUser.Last_name = strings.ToLower(newUser.Last_name)
 	//sign up
 	_, err = ah.authService.Register(&newUser)
 	if err != nil {
@@ -227,4 +230,51 @@ func (ah *AuthenticationHandler) RefreshTokenHandler(w http.ResponseWriter, r *h
 		fmt.Fprint(w, "Error encoding response: ", err)
 		return
 	}
+}
+
+func (ah *AuthenticationHandler) EditUserDetails(w http.ResponseWriter, r *http.Request) {
+	var editDetails models.EditUserRequest
+	err := json.NewDecoder(r.Body).Decode(&editDetails)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error decoding json: %v", err), http.StatusInternalServerError)
+	}
+
+	if editDetails.Email == "" {
+		http.Error(w, "email was not provided", http.StatusBadRequest)
+	}
+
+	user, err := ah.authService.GetUserByEmail(editDetails.Email)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error getting user: %v", err), http.StatusInternalServerError)
+	}
+
+	var newUser models.User
+
+	if editDetails.First_name != "" {
+		newUser.First_name = editDetails.First_name
+	} else {
+		newUser.First_name = user.First_name
+	}
+	if editDetails.Last_name != "" {
+		newUser.Last_name = editDetails.Last_name
+	} else {
+		newUser.Last_name = user.Last_name
+	}
+	if editDetails.Phone_number != "" {
+		newUser.Phone_number = editDetails.Phone_number
+	} else {
+		newUser.Phone_number = user.Phone_number
+	}
+
+	newUser.Email = user.Email
+	newUser.User_password = user.User_password
+
+	err = ah.authService.UpadateUser(user.Id, &newUser)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error updating user: %v", err), http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusAccepted)
 }
