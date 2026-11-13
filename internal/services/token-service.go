@@ -51,12 +51,20 @@ func (ts *TokenService) ValidateAccessToken(tokenString string) (*jwt.MapClaims,
 	if !token.Valid {
 		return nil, err
 	}
-
-	claims, ok := token.Claims.(*jwt.MapClaims)
+	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, err
 	}
-	return claims, nil
+	exp, err := claims.GetExpirationTime()
+	if err != nil {
+		return nil, err
+	}
+
+	if time.Now().After(exp.Time) {
+		return nil, errors.New("token has expired")
+	}
+
+	return &claims, nil
 }
 
 func (ts *TokenService) GenerateRefreshToken(userId int, exp time.Time) (*models.RefreshToken, error) {

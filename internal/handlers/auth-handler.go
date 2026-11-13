@@ -192,7 +192,6 @@ func (ah *AuthenticationHandler) RefreshTokenHandler(w http.ResponseWriter, r *h
 
 	// check if refresh token is expired
 	if time.Now().After(refreshToken.Expiry) {
-		fmt.Println("About to revoke token")
 		err := ah.tokenService.RevokeRefreshToken(refreshToken.Token)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
