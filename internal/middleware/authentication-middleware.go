@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"rayaw-api/internal/interfaces"
+	"regexp"
 	"slices"
 	"strings"
 )
@@ -16,7 +17,16 @@ func AuthenticationMiddleware(next http.Handler, authInterface interfaces.AuthIn
 			"/auth/refresh",
 			"/payment-verify-webhook",
 			"/products",
-			"/products/{id}",
+		}
+
+		// add dymanic path the allowed slice
+		re, err := regexp.Compile(`(products/)\d+`)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error compiling regex: %v", err), http.StatusInternalServerError)
+		}
+
+		if re.MatchString(r.URL.Path) {
+			allowed = append(allowed, r.URL.Path)
 		}
 
 		if !slices.Contains(allowed, r.URL.Path) {
