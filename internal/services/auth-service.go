@@ -4,6 +4,7 @@ import (
 	"errors"
 	"rayaw-api/internal/models"
 	"rayaw-api/internal/repositories"
+	"rayaw-api/utils"
 )
 
 type AuthService struct {
@@ -22,6 +23,13 @@ func (as *AuthService) Register(signUpRequest *models.SignUpRequest) (int, error
 	newUser.Email = signUpRequest.Email
 	newUser.Phone_number = signUpRequest.Phone_number
 	newUser.User_password = signUpRequest.User_password
+
+	//hash password
+	hashedPassword, err := utils.Hash(newUser.User_password)
+	if err != nil {
+		return -1, err
+	}
+	newUser.User_password = hashedPassword
 
 	//check if user already exits
 	result, err := as.authRepo.GetUserByEmail(newUser.Email)
@@ -42,7 +50,8 @@ func (as *AuthService) Login(loginRequest *models.LoginRequest) (*models.User, e
 		return nil, errors.New("user does not exist")
 	}
 
-	if user.User_password != loginRequest.User_password {
+	err = utils.CheckHash(user.User_password, loginRequest.User_password)
+	if err != nil {
 		return nil, errors.New("wrong password")
 	}
 
