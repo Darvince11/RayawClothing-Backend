@@ -4,6 +4,7 @@ import (
 	"rayaw-api/internal/models"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func MergeMap(m1, m2 *map[string]any) map[string]any {
@@ -25,4 +26,18 @@ func GroupItemsById(items *[]models.OrderItem) map[uuid.UUID][]models.OrderItem 
 		result[item.OrderId] = append(result[item.OrderId], item)
 	}
 	return result
+}
+
+func Hash(text string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
+
+	if err != nil {
+		return "", nil
+	}
+
+	return string(hash), nil
+}
+
+func CheckHash(hash string, text string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(text))
 }
