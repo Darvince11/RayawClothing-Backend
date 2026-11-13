@@ -38,7 +38,8 @@ func (ar *ImplAuthRepository) GetUserByEmail(email string) (*models.User, error)
 func (ar *ImplAuthRepository) UpdateUser(id int, newUser *models.User) error {
 	query := `UPDATE users
 	SET first_name=$1, last_name=$2, email=$3, phone_number=$4, user_password=$5
+	WHERE id=$6
 	`
-	_, err := ar.db.Exec(query, newUser.First_name, newUser.Last_name, newUser.Email, newUser.Phone_number, newUser.User_password)
+	_, err := ar.db.Exec(query, newUser.First_name, newUser.Last_name, newUser.Email, newUser.Phone_number, newUser.User_password, id)
 	return err
 }

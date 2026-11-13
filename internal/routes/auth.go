@@ -18,4 +18,5 @@ func (a *AuthRoutes) RegisterRoutes() {
 	a.mux.HandleFunc("POST /signup", a.authHandler.SignUpHandler)
 	a.mux.HandleFunc("POST /login", a.authHandler.LoginHandler)
 	a.mux.HandleFunc("POST /auth/refresh", a.authHandler.RefreshTokenHandler)
+	a.mux.HandleFunc("POST /auth/user/edit", a.authHandler.EditUserDetails)
 }
